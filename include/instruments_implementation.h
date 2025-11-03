@@ -1,0 +1,76 @@
+#ifndef INSTRUMENTS_IMPLEMENTATION
+#define INSTRUMENTS_IMPLEMENTATION
+
+#include "types.h"
+#include "cpu.h"
+
+void ADC(void);
+void SBC(void);
+void LDA(void);
+void STA(void);
+void LDX(void);
+void LDY(void);
+void STX(void);
+void STY(void);
+void BRK(void);
+void BPL_(void);
+void BMI_(void);
+void BVC_(void);
+void BVS_(void);
+void BCC_(void);
+void BCS_(void);
+void BNE_(void);
+void BEQ_(void);
+void TAX(void);
+void TXA(void);
+void TAY(void);
+void TYA(void);
+void TSX(void);
+void TXS(void);
+void PHA(void);
+void PLA(void);
+void PHP(void);
+void PLP(void);
+void INX(void);
+void DEX(void);
+void INY(void);
+void DEY(void);
+void INC(void);
+void DEC(void);
+void CLC(void);
+void SEC(void);
+void CLI(void);
+void SEI(void);
+void CLD(void);
+void SED(void);
+void CLV(void);
+void NOP(void);
+void BRK(void);
+void AND(void);
+void ORA(void);
+void EOR(void);
+void ASL(void);
+void LSR(void);
+void ROL(void);
+void ROR(void);
+void CMP(void);
+void CPX(void);
+void CPY(void);
+void JMP(void);
+void JSR(void);
+void RTS(void);
+void RTI(void);
+void BIT(void);
+
+// Illegal/Undocumented opcodes (stable on real hardware)
+void LAX(void);   // LDA + LDX combined
+void SAX(void);   // Store A AND X
+void DCP(void);   // DEC + CMP
+void ISC(void);   // INC + SBC
+void SLO(void);   // ASL + ORA
+void RLA(void);   // ROL + AND
+void SRE(void);   // LSR + EOR
+void RRA(void);   // ROR + ADC
+void NOP_READ(void); // NOP that reads memory
+
+#endif

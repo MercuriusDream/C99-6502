@@ -1,0 +1,324 @@
+#include "instruments_table.h"
+#include "types.h"
+
+extern const INST INST_TABLE[0x10][0x10] = {
+    // 0x0_
+    {
+        {"BRK",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ZP,REG_A,REG_NONE},
+        {"ASL",ADDR_ZP,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"PHP",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_IMM,REG_A,REG_NONE},
+        {"ASL",ADDR_ACC,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ABS,REG_A,REG_NONE},
+        {"ASL",ADDR_ABS,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x1_
+    {
+        {"BPL",ADDR_REL,REG_NONE,REG_NONE},
+        {"ORA",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ZPX,REG_A,REG_NONE},
+        {"ASL",ADDR_ZPX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CLC",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ABSX,REG_A,REG_NONE},
+        {"ASL",ADDR_ABSX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x2_
+    {
+        {"JSR",ADDR_ABS,REG_NONE,REG_NONE},
+        {"AND",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"BIT",ADDR_ZP,REG_NONE,REG_NONE},
+        {"AND",ADDR_ZP,REG_A,REG_NONE},
+        {"ROL",ADDR_ZP,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"PLP",ADDR_NONE,REG_NONE,REG_NONE},
+        {"AND",ADDR_IMM,REG_A,REG_NONE},
+        {"ROL",ADDR_ACC,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"BIT",ADDR_ABS,REG_NONE,REG_NONE},
+        {"AND",ADDR_ABS,REG_A,REG_NONE},
+        {"ROL",ADDR_ABS,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x3_
+    {
+        {"BMI",ADDR_REL,REG_NONE,REG_NONE},
+        {"AND",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"AND",ADDR_ZPX,REG_A,REG_NONE},
+        {"ROL",ADDR_ZPX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SEC",ADDR_NONE,REG_NONE,REG_NONE},
+        {"AND",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"AND",ADDR_ABSX,REG_A,REG_NONE},
+        {"ROL",ADDR_ABSX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x4_
+    {
+        {"RTI",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ZP,REG_A,REG_NONE},
+        {"LSR",ADDR_ZP,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"PHA",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_IMM,REG_A,REG_NONE},
+        {"LSR",ADDR_ACC,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"JMP",ADDR_ABS,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ABS,REG_A,REG_NONE},
+        {"LSR",ADDR_ABS,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x5_
+    {
+        {"BVC",ADDR_REL,REG_NONE,REG_NONE},
+        {"EOR",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ZPX,REG_A,REG_NONE},
+        {"LSR",ADDR_ZPX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CLI",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ABSX,REG_A,REG_NONE},
+        {"LSR",ADDR_ABSX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x6_
+    {
+        {"RTS",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ZP,REG_A,REG_NONE},
+        {"ROR",ADDR_ZP,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"PLA",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_IMM,REG_A,REG_NONE},
+        {"ROR",ADDR_ACC,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"JMP",ADDR_IND,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ABS,REG_A,REG_NONE},
+        {"ROR",ADDR_ABS,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x7_
+    {
+        {"BVS",ADDR_REL,REG_NONE,REG_NONE},
+        {"ADC",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ZPX,REG_A,REG_NONE},
+        {"ROR",ADDR_ZPX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SEI",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ABSX,REG_A,REG_NONE},
+        {"ROR",ADDR_ABSX,REG_A,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x8_
+    {
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STA",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STY",ADDR_ZP,REG_Y,REG_NONE},
+        {"STA",ADDR_ZP,REG_A,REG_NONE},
+        {"STX",ADDR_ZP,REG_X,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"DEY",ADDR_NONE,REG_Y,REG_NONE},
+        {"STA",ADDR_ABSY,REG_A,REG_NONE},
+        {"TXS",ADDR_NONE,REG_X,REG_SP},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STY",ADDR_ABS,REG_Y,REG_NONE},
+        {"STA",ADDR_ABS,REG_A,REG_NONE},
+        {"STX",ADDR_ABS,REG_X,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0x9_
+    {
+        {"BCC",ADDR_REL,REG_NONE,REG_NONE},
+        {"STA",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STY",ADDR_ZPX,REG_Y,REG_NONE},
+        {"STA",ADDR_ZPX,REG_A,REG_NONE},
+        {"STX",ADDR_ZPY,REG_X,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"TYA",ADDR_NONE,REG_Y,REG_A},
+        {"STA",ADDR_ABSY,REG_A,REG_NONE},
+        {"TXS",ADDR_NONE,REG_X,REG_SP},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STA",ADDR_ABSX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xA_
+    {
+        {"LDY",ADDR_IMM,REG_NONE,REG_Y},
+        {"LDA",ADDR_INDX,REG_NONE,REG_A},
+        {"LDX",ADDR_IMM,REG_NONE,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDY",ADDR_ZP,REG_NONE,REG_Y},
+        {"LDA",ADDR_ZP,REG_NONE,REG_A},
+        {"LDX",ADDR_ZP,REG_NONE,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"TAY",ADDR_NONE,REG_A,REG_Y},
+        {"LDA",ADDR_IMM,REG_NONE,REG_A},
+        {"TAX",ADDR_NONE,REG_A,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDY",ADDR_ABS,REG_NONE,REG_Y},
+        {"LDA",ADDR_ABS,REG_NONE,REG_A},
+        {"LDX",ADDR_ABS,REG_NONE,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xB_
+    {
+        {"BCS",ADDR_REL,REG_NONE,REG_NONE},
+        {"LDA",ADDR_INDY,REG_NONE,REG_A},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDY",ADDR_ZPX,REG_NONE,REG_Y},
+        {"LDA",ADDR_ZPX,REG_NONE,REG_A},
+        {"LDX",ADDR_ZPY,REG_NONE,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CLV",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDA",ADDR_ABSY,REG_NONE,REG_A},
+        {"TSX",ADDR_NONE,REG_SP,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDY",ADDR_ABSX,REG_NONE,REG_Y},
+        {"LDA",ADDR_ABSX,REG_NONE,REG_A},
+        {"LDX",ADDR_ABSY,REG_NONE,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xC_
+    {
+        {"CPY",ADDR_IMM,REG_Y,REG_NONE},
+        {"CMP",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CPY",ADDR_ZP,REG_Y,REG_NONE},
+        {"CMP",ADDR_ZP,REG_A,REG_NONE},
+        {"DEC",ADDR_ZP,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"INY",ADDR_NONE,REG_Y,REG_Y},
+        {"CMP",ADDR_IMM,REG_A,REG_NONE},
+        {"DEX",ADDR_NONE,REG_X,REG_X},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CPY",ADDR_ABS,REG_Y,REG_NONE},
+        {"CMP",ADDR_ABS,REG_A,REG_NONE},
+        {"DEC",ADDR_ABS,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xD_
+    {
+        {"BNE",ADDR_REL,REG_NONE,REG_NONE},
+        {"CMP",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CMP",ADDR_ZPX,REG_A,REG_NONE},
+        {"DEC",ADDR_ZPX,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CLD",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CMP",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CMP",ADDR_ABSX,REG_A,REG_NONE},
+        {"DEC",ADDR_ABSX,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xE_
+    {
+        {"CPX",ADDR_IMM,REG_X,REG_NONE},
+        {"SBC",ADDR_INDX,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CPX",ADDR_ZP,REG_X,REG_NONE},
+        {"SBC",ADDR_ZP,REG_A,REG_NONE},
+        {"INC",ADDR_ZP,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"INX",ADDR_NONE,REG_X,REG_X},
+        {"SBC",ADDR_IMM,REG_A,REG_NONE},
+        {"NOP",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CPX",ADDR_ABS,REG_X,REG_NONE},
+        {"SBC",ADDR_ABS,REG_A,REG_NONE},
+        {"INC",ADDR_ABS,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    },
+
+    // 0xF_
+    {
+        {"BEQ",ADDR_REL,REG_NONE,REG_NONE},
+        {"SBC",ADDR_INDY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SBC",ADDR_ZPX,REG_A,REG_NONE},
+        {"INC",ADDR_ZPX,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SED",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SBC",ADDR_ABSY,REG_A,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SBC",ADDR_ABSX,REG_A,REG_NONE},
+        {"INC",ADDR_ABSX,REG_NONE,REG_NONE},
+        {"???",ADDR_NONE,REG_NONE,REG_NONE}
+    }
+};
