@@ -14,7 +14,11 @@ The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant ca
 
 ### Requirements
 
-A C99-compliant compiler (GCC or Clang) and Make are required to build the emulator. Python 3 is recommended for building the example ROM.
+A C99-compliant compiler (GCC or Clang) and Make are required to build the emulator.
+
+Python 3 is also needed to build the example ROM. *(Optional)*
+
+### Building the Emulator
 
 ```bash
 # Build emulator
