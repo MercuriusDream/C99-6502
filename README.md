@@ -1,6 +1,8 @@
-# Mercurius6502
+# C99-6502
 
 Computer architecture is, indeed, not that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to understand the most of it.
+
+## Introduction
 
 This project is a cycle-accurate MOS 6502 processor emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
 
