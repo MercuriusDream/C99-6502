@@ -223,7 +223,7 @@ This implementation is based on the MOS Technology 6502 Programming Manual, docu
 
 ## License
 
-See the `LICENSE` file for licensing terms.
+See the [LICENSE](LICENSE) file for licensing terms.
 
 ## Also
 
