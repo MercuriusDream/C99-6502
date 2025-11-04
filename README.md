@@ -1,6 +1,8 @@
 # C99-6502
 
-Computer architecture is, indeed, not that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to understand the most of it.
+[Korean / 한국어](./README_KO.md)
+
+The Systems Software isn't, indeed, that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to understand the most of lecture.
 
 ## Introduction
 
@@ -8,7 +10,7 @@ This project is a cycle-accurate MOS 6502 processor emulator written in C99 that
 
 The emulator supports the complete instruction set with stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
 
-Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32KB RAM ($0000-$7FFF) and 32KB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems (NES, Apple II, Commodore 64) by configuring appropriate memory maps for each platform.
+Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32iB RAM ($0000-$7FFF) and 32KiB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems (NES, Apple II, Commodore 64) by configuring appropriate memory maps for each platform.
 
 The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02 (note: new 65C02 instructions beyond the base 6502 set are not yet implemented).
 
@@ -18,7 +20,7 @@ The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant ca
 
 A C99-compliant compiler (GCC or Clang) and Make are required to build the emulator.
 
-Python 3 is also needed to build the example ROM. *(Optional)*
+Python 3 is also required to build the example ROM. *(Optional)*
 
 ### Building the Emulator
 
@@ -169,7 +171,7 @@ The decimal (BCD) mode N/Z flag behavior is the most commonly encountered differ
 
 All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: **LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA**, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
 
-Note: In 65C02 mode, most undocumented opcodes were officially changed to NOPs. The current implementation treats them as NOPs in both modes, which is functionally correct for 65C02 but means some NMOS-specific undocumented opcodes won't work in NMOS mode if they're unimplemented.
+*Note: In 65C02 mode, most undocumented opcodes were officially changed to NOPs. The current implementation treats them as NOPs in both modes, which is functionally correct for 65C02 but means some NMOS-specific undocumented opcodes won't work in NMOS mode if they're unimplemented.*
 
 ## Testing
 
@@ -225,6 +227,6 @@ See the `LICENSE` file for licensing terms.
 
 ## Also
 
-Thank you for reading this to the very end! I wish you a good day.
+Thank you for reading this to the very end! I wish you a good day (˶˃ ᵕ ˂˶) .ᐟ.ᐟ
 
-*Written by a METHYLPHENIDATE-POWERED-YET-LISDEXAMFETAMINE-REQUIRED-YET-ILLEGAL-SO-I-HAVE-TO-SUFFER-WITH-MALADAPTIVE-DAYDREAMING sophomore who really wanted to understand the CS lecture. 1 a.m., UTC+9. ~~PLEASE-SOMEONE-RESCUE-ME-OUTTA-SK~~*
+<sub>*Written by a METHYLPHENIDATE-POWERED-YET-LISDEXAMFETAMINE-REQUIRED-YET-ILLEGAL-SO-I-HAVE-TO-SUFFER-WITH-MALADAPTIVE-DAYDREAMING sophomore who really wanted to understand the CS lecture. 1 a.m., UTC+9. ~~Someone plz get me outta SK~~*</sub>
