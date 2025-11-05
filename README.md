@@ -12,7 +12,9 @@ The emulator supports the complete instruction set with stable undocumented opco
 
 Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32iB RAM ($0000-$7FFF) and 32KiB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems (NES, Apple II, Commodore 64) by configuring appropriate memory maps for each platform.
 
-The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02 (note: new 65C02 instructions beyond the base 6502 set are not yet implemented).
+The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02.
+
+*Note: those new CMOS 65C02 instructions, beyond the base 6502 set, are not yet implemented.*
 
 ## Getting Started
 
@@ -55,16 +57,26 @@ bin/mos6502 -f program.bin -a C000 -t
 
 # Use CMOS 65C02 variant
 bin/mos6502 -f program.bin -a 8000 -c 65c02
+
+# Configure custom memory layout (16KB RAM + 16KB ROM)
+bin/mos6502 -r 0x0000 -R 16384 -s 0x4000 -S 16384
+
+# Combine multiple options
+bin/mos6502 -f program.bin -a 8000 -t -c 65c02 -r 0x0 -R 32768
 ```
 
 **Options**
 
-| Option          | Description                                             |
-| --------------- | ------------------------------------------------------- |
-| `-f <file>`     | Binary to load                                          |
-| `-a <addr>`     | Load address in hex (e.g., `8000`, `C000`)              |
-| `-c`, `--cpu`   | CPU variant: `6502`, `nmos`, `65c02`, `cmos` (default: `nmos`) |
-| `-t`, `--trace` | Print instruction-by-instruction trace                  |
+| Option               | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| `-f`, `--file`       | Binary file to load                                     |
+| `-a`, `--address`    | Load address in hex (e.g., `8000`, `C000`)              |
+| `-c`, `--cpu`        | CPU variant: `6502`, `nmos`, `65c02`, `cmos` (default: `nmos`) |
+| `-t`, `--trace`      | Print instruction-by-instruction trace                  |
+| `-r`, `--ram-start`  | RAM start address in hex (default: `0000`)              |
+| `-R`, `--ram-size`   | RAM size in bytes (default: `32768`)                    |
+| `-s`, `--rom-start`  | ROM start address in hex (default: `8000`)              |
+| `-S`, `--rom-size`   | ROM size in bytes (default: `32768`)                    |
 
 **Example (trace excerpt)**
 
@@ -99,7 +111,7 @@ The default configuration uses a 32KB RAM / 32KB ROM split:
 | $FFFC–$FFFD | ROM  | Reset vector                               |
 | $FFFE–$FFFF | ROM  | IRQ/BRK vector                             |
 
-This memory layout is configurable through the region-based API, which means the emulator can mimic different 6502-based systems.
+This memory layout is configurable both through command-line options (`--ram-start`, `--ram-size`, `--rom-start`, `--rom-size`) and the region-based API, which means the emulator can mimic different 6502-based systems.
 
 ### Configuring Memory Regions
 
@@ -175,13 +187,33 @@ All official 6502 opcodes are implemented. When running in NMOS mode, undocument
 
 ## Testing
 
-The project includes a small example ROM and a C-based verification test suite in `tests/verify_test.c`. The emulator is designed to run standard community test ROMs including functional and decimal mode test suites. Test results and suite compatibility should be documented in `tests/README.md`.
+The project includes multiple testing approaches to ensure correctness:
 
-Run tests with:
+### Klaus Dormann Functional Tests
+
+The emulator passes the infamous Klaus Dormann 6502 functional test suite, which validates ALL official opcodes, addressing modes, flag behavior, and edge cases. Approx. 30.6M cycles are expected before the pass.
+
+```bash
+# Download the test suite (only needed once)
+make download-functional-test
+
+# Build and run the functional test
+make functional-test
+bin/functional_test
+
+# Test with CMOS 65C02 variant
+bin/functional_test -c 65c02
+```
+
+The functional test runner (`tests/6502_functional_test/run_functional_test.c`) configures 64KB of RAM, loads the test binary, and detects test success or failure by monitoring the program counter. Test progress is displayed as dots(`.`), with each dot representing a million cycles.
+
+### Basic Verification Tests
+
+The project also includes a small example ROM, with Host tools, which we call the *verification test suite* in `tests/verify_test.c` for basic verifications:
 
 ```bash
 make verify
-bin/mos6502 -f examples/test.bin -a 8000 -t
+bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 ```
 
 ## Limitations
@@ -200,20 +232,22 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── instruments_handlers.c          # opcode dispatch (file name retained)
+│   ├── instruments_handlers.c          # opcode dispatch
 │   ├── instruments_implementation.c    # opcode handlers
 │   ├── instruments_table.c             # metadata
 │   ├── loader.c
 │   ├── memory.c
 │   ├── stack.c
 │   └── trace.c
+├── tests/                # Test
+│   ├── 6502_functional_test/   # Klaus Dormann functional test
+│   └── minimal/          # Minimal test suite
 ├── include/              # Headers
-├── examples/             # Example ROMs & builder
-├── tests/                # Verification
 ├── bin/                  # Build outputs
 ├── main.c
 ├── Makefile
 ├── README.md
+├── README_KO.md           # Korean version of README
 └── .gitignore
 ```
 
@@ -225,8 +259,12 @@ This implementation is based on the MOS Technology 6502 Programming Manual, docu
 
 See the [LICENSE](LICENSE) file for licensing terms.
 
+### Open Source License
+
+6502_functional_test, Made by Klaus Dormann, and this project's related sources are protected under the GNU GPL Version 3 License. For licensing terms, Please see the [README of the 6502_functional_test](tests/6502_functional_test/README.md).
+
 ## Also
 
 Thank you for reading this to the very end! I wish you a good day (˶˃ ᵕ ˂˶) .ᐟ.ᐟ
 
-<sub>*Written by a METHYLPHENIDATE-POWERED-YET-LISDEXAMFETAMINE-REQUIRED-YET-ILLEGAL-SO-I-HAVE-TO-SUFFER-WITH-MALADAPTIVE-DAYDREAMING sophomore who really wanted to understand the CS lecture. 1 a.m., UTC+9. ~~Someone plz get me outta SK~~*</sub>
+<sub>*Written by a CS Sophomore from South Korea, Powered by Methylphenidate Hydrochloride, Which requires Lisdexamfetamine Dimesylate to function, While that being illegal in South Korea. *(Which means, I suffer w/ Maladaptive Daydreaming and Executive Dysfunction.)<br>~~Someone please get me outta SK~~*</sub>

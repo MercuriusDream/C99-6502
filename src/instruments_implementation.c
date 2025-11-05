@@ -3,6 +3,7 @@
 #include "bus.h"
 #include "cpu.h"
 #include "stack.h"
+#include <stdio.h>
 
 // TODO: Implement 65C02-specific instructions:
 // - BRA (Branch Always) - $80
@@ -187,9 +188,10 @@ void CLD(void) { CLR_FLAG(FLAG_D); }
 void SED(void) { SET_FLAG(FLAG_D); }
 void CLV(void) { CLR_FLAG(FLAG_V); }
 void NOP(void) { }
-void BRK(void) { 
-    // Simplified BRK: push PC+2, push P, set I, jump to IRQ vector
-    push16(REG.PC + 2);
+void BRK(void) {
+    // BRK: push PC+1 (since PC already incremented past opcode), push P with B flag, set I, jump to IRQ vector
+    // Note: PC is already pointing to the byte after BRK opcode when this handler executes
+    push16(REG.PC + 1);  // Push return address (BRK location + 2)
     push8(REG.P | FLAG_B | FLAG_U);
     SET_FLAG(FLAG_I);
     REG.PC = bus_read16(0xFFFE);

@@ -65,9 +65,13 @@ MEM_TWO_WORDS addr_indy(int* page_cross) {
 MEM_TWO_WORDS addr_imm() {
     return (MEM_TWO_WORDS)fetch8();
 }
+
 MEM_TWO_WORDS addr_rel() {
-    return (MEM_TWO_WORDS)REG.PC + (SIGNED_MEM_WORD)fetch8();
-} // Relative addressing mode
+    // Must fetch offset first, then use updated PC
+    // Doing "REG.PC + fetch8()" is undefined behavior since fetch8() modifies REG.PC
+    SIGNED_MEM_WORD offset = (SIGNED_MEM_WORD)fetch8();
+    return (MEM_TWO_WORDS)REG.PC + offset;
+}
 
 MEM_TWO_WORDS addr_resolve(ADDR_MODE mode, int* page_cross, int* has_ea) {
     if (page_cross) *page_cross = 0;

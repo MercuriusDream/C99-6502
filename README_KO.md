@@ -2,7 +2,7 @@
 
 [English / 영어](.?tab=readme-ov-file)
 
-2학년 학부생이 듣기에 시스템 소프트웨어 강의의 난이도가 그렇게 적절하다고 말할 순 없는 것이 공론인 것 같습니다. 그러나 어떻게라도 조금이나마 더 쉽게 이해하고자, 잘 알려진 마이크로프로세서의 에뮬레이터를 직접 만들며 운영 체제 구조를 뜯어보기로 결심했습니다.
+2학년 학부생이 듣기에 시스템 소프트웨어 강의가 쉬운 건... 아닌 것 같습니다. 그래서, 조금이나마 더 쉽게 이해하고자 널리 알려진 마이크로프로세서의 에뮬레이터를 직접 제작하며 운영 체제의 구조를 익히고자 합니다.
 
 ## 소개
 
@@ -12,7 +12,9 @@
 
 메모리의 구성은 주소가 RAM, ROM, 그리고 입출력 영역으로 구분되어 있는 지역 기반 시스템을 사용합니다. 기본 구성의 경우, 32KiB RAM ($0000-$7FFF)과 32KiB ROM ($8000-$FFFF)을 할당함으로서 다양한 클래식 6502 시스템의 구성을 모방합니다. ROM 영역은 자동으로 쓰기 보호가 적용되며, 입출력 영역은 디바이스 에뮬레이션을 위한 커스텀 읽기/쓰기 핸들러를 지원합니다. 이 유연한 아키텍처는 NES, Apple II, Commodore 64와 같은 여러 시스템의 적절한 메모리 매핑을 구성할 수 있게 함으로서 다양한 시스템의 정확한 에뮬레이션을 가능케 합니다.
 
-본 예뮬레이터는 NMOS 6502와 CMOS 65C02 CPU 두 가지를 모두 지원합니다. 에뮬레이터 실행 시 명령 구문을 통하여 선택될 수 있으며(미선택 시 NMOS 6502), 두 CPU 사이의 핵심 차이점으로는 BCD 플래그의 작동, JMP 래핑 버그의 해결, 그리고 65C02에서의 명령 세트 추가 등이 존재합니다. (첨언: 65C02에서 신규로 추가된 명령은 현재 지원되지 않습니다.)
+본 예뮬레이터는 NMOS 6502와 CMOS 65C02 CPU 두 가지를 모두 지원합니다. CPU의 종류는 에뮬레이터 실행 시 명령줄 구문을 통하여 선택될 수 있으며, (미선택 시 NMOS 6502) BCD 플래그의 작동, JMP 래핑 버그의 해결, 명령 세트 추가 등과 같은 65C02와 6502 간 차이점을 구현하였습니다. 
+
+*첨언: 65C02에서 신규로 추가된 명령은 현재 지원되지 않습니다.*
 
 ## 시작하기
 
@@ -55,16 +57,26 @@ bin/mos6502 -f program.bin -a C000 -t
 
 # CMOS 65C02
 bin/mos6502 -f program.bin -a 8000 -c 65c02
+
+# 커스텀 메모리 레이아웃 구성 (16KB RAM + 16KB ROM)
+bin/mos6502 -r 0x0000 -R 16384 -s 0x4000 -S 16384
+
+# 여러 옵션 조합
+bin/mos6502 -f program.bin -a 8000 -t -c 65c02 -r 0x0 -R 32768
 ```
 
 **옵션**
 
-| 옵션             | 설명                                                     |
-| --------------- | ------------------------------------------------------- |
-| `-f <file>`     | 로드할 바이너리                                             |
-| `-a <addr>`     | 16진수로서 로드할 주소      (예: `8000`, `C000`)              |
-| `-c`, `--cpu`   | CPU 변형: `6502`, `nmos`, `65c02`, `cmos` (기본: `nmos`)  |
-| `-t`, `--trace` | 각 명령줄에 대한 트레이스의 실행                                |
+| 옵션                  | 설명                                                     |
+| -------------------- | ------------------------------------------------------- |
+| `-f`, `--file`       | 로드할 바이너리 파일                                        |
+| `-a`, `--address`    | 16진수로서 로드할 주소 (예: `8000`, `C000`)                 |
+| `-c`, `--cpu`        | CPU 변형: `6502`, `nmos`, `65c02`, `cmos` (기본: `nmos`)  |
+| `-t`, `--trace`      | 각 명령줄에 대한 트레이스의 실행                              |
+| `-r`, `--ram-start`  | 16진수로서 RAM 시작 주소 (기본: `0000`)                     |
+| `-R`, `--ram-size`   | RAM 크기 (바이트 단위) (기본: `32768`)                      |
+| `-s`, `--rom-start`  | 16진수로서 ROM 시작 주소 (기본: `8000`)                     |
+| `-S`, `--rom-size`   | ROM 크기 (바이트 단위) (기본: `32768`)                      |
 
 **예시 (trace excerpt)**
 
@@ -99,7 +111,7 @@ Running...
 | $FFFC–$FFFD | ROM  | 리셋 벡터                               |
 | $FFFE–$FFFF | ROM  | IRQ/BRK 벡터                             |
 
-이 메모리 레이아웃은 지역 기반 API를 사용하여 구성할 수 있습니다. 즉, 본 에뮬레이터는 여러 6502 기반의 시스템에 대한 범용 에뮬레이터로서 기능할 수 있습니다.
+이 메모리 레이아웃은 명령줄 옵션 (`--ram-start`, `--ram-size`, `--rom-start`, `--rom-size`) 과 지역 기반 API를 통하여 구성될 수 있으며, 이를 통하여 여러 6502 기반 시스템을 구현하는 범용 에뮬레이터로 확장될 수 있습니다.
 
 ### 메모리 영역의 구성
 
@@ -109,10 +121,10 @@ Running...
 // 존재하는 메모리 영역 삭제
 mem_region_clear();
 
-// Add 32KB RAM at $0000-$7FFF
+// $0000-$7FFF 주소에 RAM 할당
 mem_region_add_ram(0x0000, 0x8000);
 
-// Add 32KB ROM at $8000-$FFFF
+// $8000-$FFFF 주소에 ROM 할당
 mem_region_add_rom(0x8000, 0x8000);
 
 // 메모리에의 ROM 파일 적재
@@ -169,19 +181,39 @@ ROM 영역은 자동적으로 쓰기 보호되며, ROM 주소로의 쓰기는 �
 
 ## 지원 명령
 
-모든 공식 6502 명령이 구현되었습니다. NMOS 모드로 실행하는 경우, 실제 NMOS 시스템에서 사용된 비공식 명령을 지원하며, 대표적인 예시는 다음과 같습니다: **LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA**. 불안정한 비공식 명령 (`$9B`, `$9C`, `$9E`, `$9F`)은 실 하드웨어의 예측 불가능한 작동으로 인하여 제외되었습니다.
+모든 공식 6502 명령이 구현되었습니다. NMOS 모드로 실행하는 경우, 실제 NMOS 시스템에서 사용된 비공식 명령을 지원하며, 대표적인 예시는 다음과 같습니다:`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`. 다만 일부 불안정한 비공식 명령 (`$9B`, `$9C`, `$9E`, `$9F`)은 실 하드웨어의 예측 불가능한 작동으로 인하여 제외되었습니다.
 
 *첨언: 65C02 모드에서, 대부분의 비공식 명령들은 NOP으로 치환되었습니다. 현재 구현상 해당 경우 두 모드 모두에서 NOP로 간주되는데, 65C02 관점에서 기능상 옳으나 몇 가지의 NMOS 6502에서만 동작하는 비공식 명령이 작동하지 않을 가능성이 있습니다.*
 
 ## 테스팅
 
-본 프로젝트는 예시 ROM과 C 기반의 검증 도구를 `tests/verify_test.c`에 포함하고 있습니다. 본 에뮬레이터는 커뮤니티의 표준적인 테스팅 ROM을 구동하도록 설계되었으며, 테스트 결과의 경우 `tests/README.md`에 저장됩니다.
+에뮬레이션의 구현 정확도를 검증하기 위한 테스팅 수단이 포함되어 있습니다. `tests` 폴더를 참조하십시오.
 
-다음과 같이 테스트를 수행할 수 있습니다:
+### Klaus Dormann Functional Tests
+
+에뮬레이터는 모든 공식 명령, 주소 지정 모드, 플래그 작동을 포함한 MOS 6502의 작동을 검증하는 대표적인 커뮤니티 제작 테스트인 Klaus Dormann 6502 기능 테스트를 통과합니다. 테스트는 약 30.6M 사이클 내에 성공적으로 완료됩니다.
+
+```bash
+# Test suite 초기 설정
+make download-functional-test
+
+# 기능 테스트 빌드 및 실행
+make functional-test
+bin/functional_test
+
+# CMOS 65C02 테스트
+bin/functional_test -c 65c02
+```
+
+본 테스트의 경우 (`tests/6502_functional_test/run_functional_test.c`)는 64KB의 RAM을 구성하고 테스트 바이너리를 로드한 후, 프로그램 카운터를 모니터링하여 테스트 성공 또는 실패를 감지합니다. 테스트 진행 상황은 백만 사이클당 한 개의 점(`.`)으로 표시됩니다.
+
+### 기본 검증 테스트
+
+빠른 동작 확인을 위한 예시 ROM과 C 기반의 검증 도구를 `tests/verify_test.c`에 포함하고 있습니다:
 
 ```bash
 make verify
-bin/mos6502 -f examples/test.bin -a 8000 -t
+bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 ```
 
 ## 제한 사항
@@ -196,24 +228,26 @@ bin/mos6502 -f examples/test.bin -a 8000 -t
 
 ```
 .
-├── src/                  # 핵심 소스
+├── src/                  # Core sources
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── instruments_handlers.c          # opcode 인출
-│   ├── instruments_implementation.c    # opcode 핸들러
-│   ├── instruments_table.c             # 메타데이터
+│   ├── instruments_handlers.c          # opcode dispatch
+│   ├── instruments_implementation.c    # opcode handlers
+│   ├── instruments_table.c             # metadata
 │   ├── loader.c
 │   ├── memory.c
 │   ├── stack.c
 │   └── trace.c
-├── include/              # 헤더
-├── examples/             # 예시 ROM & 빌더
-├── tests/                # 검증
-├── bin/                  # 빌드 출력
+├── tests/                # Test
+│   ├── 6502_functional_test/   # Klaus Dormann functional test
+│   └── minimal/          # Minimal test suite
+├── include/              # Headers
+├── bin/                  # Build outputs
 ├── main.c
 ├── Makefile
 ├── README.md
+├── README.md              # Korean version of README
 └── .gitignore
 ```
 
@@ -224,6 +258,10 @@ bin/mos6502 -f examples/test.bin -a 8000 -t
 ## 라이센스
 
 [LICENSE](LICENSE)를 참조하십시오.
+
+### 오픈소스 라이센스
+
+Klaus Dormann이 제작한 6502_functional_test 및 본 프로젝트의 관련 요소는 GNU GPL Version 3 라이센스로 라이센싱되어 있습니다. 자세한 사항은 [해당 폴더 내의 README](tests/6502_functional_test/README_KO.md)를 참조하십시오.
 
 ## 또한
 

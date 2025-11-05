@@ -8,11 +8,13 @@ TEST_DIR=tests
 # Source files
 SOURCES=$(wildcard $(SRC_DIR)/*.c)
 MAIN_SRC=main.c
-TEST_SRC=$(TEST_DIR)/verify_test.c
+TEST_SRC=$(TEST_DIR)/minimal/verify_test.c
+FUNCTIONAL_TEST_SRC=$(TEST_DIR)/6502_functional_test/run_functional_test.c
 
 # Output binaries
 TARGET=$(BIN_DIR)/mos6502
 TEST_TARGET=$(BIN_DIR)/verify_test
+FUNCTIONAL_TEST_TARGET=$(BIN_DIR)/functional_test
 
 # Default target
 all: $(TARGET)
@@ -29,6 +31,13 @@ $(TEST_TARGET): $(SOURCES) $(TEST_SRC) | $(BIN_DIR)
 	$(CC) $(CFLAGS) $(SOURCES) $(TEST_SRC) -o $(TEST_TARGET)
 	@echo "Built $(TEST_TARGET)"
 
+# Build functional test runner
+functional-test: $(FUNCTIONAL_TEST_TARGET)
+
+$(FUNCTIONAL_TEST_TARGET): $(SOURCES) $(FUNCTIONAL_TEST_SRC) | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) $(FUNCTIONAL_TEST_SRC) -o $(FUNCTIONAL_TEST_TARGET)
+	@echo "Built $(FUNCTIONAL_TEST_TARGET)"
+
 # Create bin directory
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -40,18 +49,34 @@ clean:
 
 # Run emulator with example ROM
 run: $(TARGET)
-	$(TARGET) -f examples/test.bin -a 8000
+	$(TARGET) -f tests/minimal/test.bin -a 8000
 
 # Run with trace
 run-trace: $(TARGET)
-	$(TARGET) -f examples/test.bin -a 8000 -t
+	$(TARGET) -f tests/minimal/test.bin -a 8000 -t
 
 # Run verification tests
 verify: $(TEST_TARGET)
 	$(TEST_TARGET)
 
+# Run Klaus Dormann functional tests
+run-functional-test: $(FUNCTIONAL_TEST_TARGET)
+	$(FUNCTIONAL_TEST_TARGET)
+
+# Download Klaus Dormann test ROM if not present
+download-functional-test:
+	@mkdir -p tests/6502_functional_test
+	@if [ ! -f tests/6502_functional_test/6502_functional_test.bin ]; then \
+		echo "Downloading Klaus Dormann functional test..."; \
+		curl -L -o tests/6502_functional_test/6502_functional_test.bin https://raw.githubusercontent.com/Klaus2m5/6502_65C02_functional_tests/master/bin_files/6502_functional_test.bin; \
+		curl -L -o tests/6502_functional_test/6502_functional_test.lst https://raw.githubusercontent.com/Klaus2m5/6502_65C02_functional_tests/master/bin_files/6502_functional_test.lst; \
+		echo "Download complete."; \
+	else \
+		echo "Functional test already downloaded."; \
+	fi
+
 # Build example ROM
 rom:
-	cd examples && python3 build_test_rom.py
+	cd tests/minimal && python3 build_test_rom.py
 
-.PHONY: all test clean run run-trace verify rom
+.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test

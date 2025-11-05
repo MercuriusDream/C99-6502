@@ -1,6 +1,13 @@
 # Project Specific
 bin
 
+# Klaus Dormann functional test binaries (download with make download-functional-test)
+tests/6502_functional_test/*.bin
+tests/6502_functional_test/*.lst
+
+# Test-generated files
+tests/minimal/*.bin
+
 # pre_generated
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,c

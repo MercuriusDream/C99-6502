@@ -6,8 +6,7 @@
 #include "loader.h"
 
 int main() {
-    printf("External CPU Funcntion Verifier Host\n");
-    printf("======================\n\n");
+    printf("C99-6502 Verifier Host\n");
 
     // Initialize memory regions
     mem_region_clear();
@@ -15,7 +14,7 @@ int main() {
     mem_region_add_rom(0x8000, 0x8000);  // 32KB ROM
 
     // Load ROM and setup
-    load_bin_region("examples/test.bin", 0x8000);
+    load_bin_region("tests/minimal/test.bin", 0x8000);
     mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, 0x8000);
     mem_region_init();
     cpu_reset();
@@ -113,9 +112,7 @@ int main() {
            val, (val == 0x99) ? "PASS" : "FAIL");
     (val == 0x99) ? passed++ : failed++;
 
-    printf("\n======================\n");
     printf("Total: %d passed, %d failed\n", passed, failed);
-    printf("======================\n");
 
     return (failed == 0) ? 0 : 1;
 }

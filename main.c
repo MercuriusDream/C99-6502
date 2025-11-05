@@ -10,53 +10,132 @@
 #include "trace.h"
 #include "loader.h"
 
+typedef enum {
+    ARG_UNKNOWN = 0,
+    ARG_TRACE,
+    ARG_FILE,
+    ARG_ADDRESS,
+    ARG_CPU,
+    ARG_RAM_START,
+    ARG_RAM_SIZE,
+    ARG_ROM_START,
+    ARG_ROM_SIZE
+} ArgType;
+
+static ArgType parse_arg(const char* arg) {
+    if (strcmp(arg, "-t") == 0 || strcmp(arg, "--trace") == 0) {
+        return ARG_TRACE;
+    } else if (strcmp(arg, "-f") == 0 || strcmp(arg, "--file") == 0) {
+        return ARG_FILE;
+    } else if (strcmp(arg, "-a") == 0 || strcmp(arg, "--address") == 0) {
+        return ARG_ADDRESS;
+    } else if (strcmp(arg, "-c") == 0 || strcmp(arg, "--cpu") == 0) {
+        return ARG_CPU;
+    } else if (strcmp(arg, "-r") == 0 || strcmp(arg, "--ram-start") == 0) {
+        return ARG_RAM_START;
+    } else if (strcmp(arg, "-R") == 0 || strcmp(arg, "--ram-size") == 0) {
+        return ARG_RAM_SIZE;
+    } else if (strcmp(arg, "-s") == 0 || strcmp(arg, "--rom-start") == 0) {
+        return ARG_ROM_START;
+    } else if (strcmp(arg, "-S") == 0 || strcmp(arg, "--rom-size") == 0) {
+        return ARG_ROM_SIZE;
+    }
+    return ARG_UNKNOWN;
+}
+
 int main(int argc, char** argv) {
     int enable_trace = 0;
     const char* rom_file = NULL;
     MEM_TWO_WORDS rom_addr = 0x8000;
     CPU_VARIANT cpu_variant = CPU_VARIANT_NMOS_6502;  // Default to NMOS
 
+    // Memory configuration defaults
+    MEM_TWO_WORDS ram_start = 0x0000;
+    MEM_TWO_WORDS ram_size = 0x8000;  // 32KB
+    MEM_TWO_WORDS rom_start = 0x8000;
+    MEM_TWO_WORDS rom_size = 0x8000;  // 32KB
+
     // Parse command line arguments
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
-            enable_trace = 1;
-        } else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) {
-            rom_file = argv[++i];
-        } else if (strcmp(argv[i], "-a") == 0 && i + 1 < argc) {
-            rom_addr = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
-        } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cpu") == 0) {
-            if (i + 1 < argc) {
-                i++;
-                if (strcmp(argv[i], "6502") == 0 || strcmp(argv[i], "nmos") == 0) {
-                    cpu_variant = CPU_VARIANT_NMOS_6502;
-                } else if (strcmp(argv[i], "65c02") == 0 || strcmp(argv[i], "cmos") == 0) {
-                    cpu_variant = CPU_VARIANT_CMOS_65C02;
-                } else {
-                    printf("Unknown CPU variant: %s\n", argv[i]);
-                    printf("Valid options: 6502, nmos, 65c02, cmos\n");
-                    return 1;
+        ArgType arg_type = parse_arg(argv[i]);
+
+        switch (arg_type) {
+            case ARG_TRACE:
+                enable_trace = 1;
+                break;
+
+            case ARG_FILE:
+                if (i + 1 < argc) {
+                    rom_file = argv[++i];
                 }
-            }
+                break;
+
+            case ARG_ADDRESS:
+                if (i + 1 < argc) {
+                    rom_addr = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                }
+                break;
+
+            case ARG_RAM_START:
+                if (i + 1 < argc) {
+                    ram_start = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                }
+                break;
+
+            case ARG_RAM_SIZE:
+                if (i + 1 < argc) {
+                    ram_size = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 0);
+                }
+                break;
+
+            case ARG_ROM_START:
+                if (i + 1 < argc) {
+                    rom_start = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                }
+                break;
+
+            case ARG_ROM_SIZE:
+                if (i + 1 < argc) {
+                    rom_size = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 0);
+                }
+                break;
+
+            case ARG_CPU:
+                if (i + 1 < argc) {
+                    i++;
+                    if (strcmp(argv[i], "6502") == 0 || strcmp(argv[i], "nmos") == 0) {
+                        cpu_variant = CPU_VARIANT_NMOS_6502;
+                    } else if (strcmp(argv[i], "65c02") == 0 || strcmp(argv[i], "cmos") == 0) {
+                        cpu_variant = CPU_VARIANT_CMOS_65C02;
+                    } else {
+                        printf("Unknown CPU variant: %s\n", argv[i]);
+                        printf("Valid options: 6502, nmos, 65c02, cmos\n");
+                        return 1;
+                    }
+                }
+                break;
+
+            case ARG_UNKNOWN:
+            default:
+                printf("Unknown argument: %s\n", argv[i]);
+                break;
         }
     }
 
     // Set CPU variant
     cpu_set_variant(cpu_variant);
 
-    printf("6502 Emulator Starting...\n");
+    printf("C99-6502\n");
     printf("CPU Variant: %s\n",
            cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502");
-    printf("Using region-based memory system...\n\n");
 
     // 1. Setup memory regions
-    // 32KB RAM: $0000-$7FFF (typical for many 6502 systems)
-    // 32KB ROM: $8000-$FFFF (program code, vectors)
     mem_region_clear();
-    mem_region_add_ram(0x0000, 0x8000);  // 32KB RAM
-    mem_region_add_rom(0x8000, 0x8000);  // 32KB ROM
+    mem_region_add_ram(ram_start, ram_size);
+    mem_region_add_rom(rom_start, rom_size);
     printf("Memory map configured:\n");
-    printf("  $0000-$7FFF: RAM (32KB)\n");
-    printf("  $8000-$FFFF: ROM (32KB)\n\n");
+    printf("  $%04X-$%04X: RAM (%uKB)\n", ram_start, ram_start + ram_size - 1, ram_size / 1024);
+    printf("  $%04X-$%04X: ROM (%uKB)\n\n", rom_start, rom_start + rom_size - 1, rom_size / 1024);
 
     // 2. Load ROM
     if (rom_file) {
