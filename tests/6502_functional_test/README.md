@@ -5,7 +5,7 @@
 ## About
 
 [This test](https://github.com/Klaus2m5/6502_65C02_functional_tests), made by Klaus Dormann, will provide the full-range test of 6502 systems, including those extreme edge cases.
-See [README.md](.../README.md) for more details.
+See [README.md](/README.md) for more details.
 
 ## License
 

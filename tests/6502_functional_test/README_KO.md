@@ -5,7 +5,7 @@
 ## About
 
 Klaus Dormann이 제작한 [본 테스트](https://github.com/Klaus2m5/6502_65C02_functional_tests)는 여러 엣지 케이스를 포함한 6502 시스템의 전반적 테스팅을 제공합니다.
-[README_KO.md](.../REAMDE_KO.md)에서 자세한 내용을 확인하십시오.
+[README_KO.md](/REAMDE_KO.md)에서 자세한 내용을 확인하십시오.
 
 ## License
 
