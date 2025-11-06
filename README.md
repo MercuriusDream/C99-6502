@@ -14,7 +14,7 @@ Memory configuration uses a region-based system where the address space is divid
 
 The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02.
 
-The CMOS 65C02 implementation includes all new instructions: **BRA** (Branch Always), **PHX/PHY** (Push X/Y), **PLX/PLY** (Pull X/Y), **STZ** (Store Zero), **TRB/TSB** (Test and Reset/Set Bits), **WAI** (Wait for Interrupt), and **STP** (Stop Processor).
+The CMOS 65C02 implementation includes all new instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), and `STP` (Stop Processor).
 
 ## Getting Started
 
