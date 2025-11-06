@@ -183,11 +183,8 @@ int main(int argc, char** argv) {
     // 7. Run
     printf("Running...\n");
     if (enable_trace) {
-        // Run step by step with trace
-        for (int i = 0; i < 20; i++) {
-            cpu_step();
-            if (REG.PC == 0) break;  // Stop on BRK vector not set
-        }
+        // Run step by step with trace until BRK or max cycles
+        cpu_run(10000);
     } else {
         cpu_run(100);
     }

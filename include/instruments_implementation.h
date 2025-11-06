@@ -73,4 +73,16 @@ void SRE(void);   // LSR + EOR
 void RRA(void);   // ROR + ADC
 void NOP_READ(void); // NOP that reads memory
 
+// CMOS 65C02 instructions
+void BRA_(void);
+void PHX(void);
+void PHY(void);
+void PLX(void);
+void PLY(void);
+void STZ(void);
+void TRB(void);
+void TSB(void);
+void WAI(void);
+void STP(void);
+
 #endif

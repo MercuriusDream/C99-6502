@@ -14,7 +14,7 @@ Memory configuration uses a region-based system where the address space is divid
 
 The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02.
 
-*Note: those new CMOS 65C02 instructions, beyond the base 6502 set, are not yet implemented.*
+The CMOS 65C02 implementation includes all new instructions: **BRA** (Branch Always), **PHX/PHY** (Push X/Y), **PLX/PLY** (Pull X/Y), **STZ** (Store Zero), **TRB/TSB** (Test and Reset/Set Bits), **WAI** (Wait for Interrupt), and **STP** (Stop Processor).
 
 ## Getting Started
 
@@ -173,9 +173,10 @@ The emulator supports both NMOS 6502 and CMOS 65C02 modes with the following beh
 | ------ | --------- | ----------- |
 | BCD (Decimal) Mode Flags | N and Z flags reflect the binary result before BCD adjustment; V is computed from the binary operation. | N and Z flags reflect the adjusted decimal result; V is computed from the binary operation. |
 | Indirect `JMP` at `$xxFF` | `JMP ($xxFF)` wraps within the page, which, reads high byte from `$xx00` of the same page. | Page-crossing bug is fixed; `JMP ($xxFF)` reads the high byte from the next page. |
-| Instruction Set | Base 6502 instruction set, including supported NMOS undocumented opcodes. | Base 6502 instruction set, excluding undocumented opcodes. *Note that undocumented 65C02-specific opcodes (BRA, PHX, PHY, PLX, PLY, STZ, TRB, TSB, WAI, STP, Rockwell bit manipulation) are not yet implemented.* |
+| Instruction Set | Base 6502 instruction set (56 official opcodes), including supported NMOS undocumented opcodes (LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA). | Base 6502 instruction set plus 10 new CMOS instructions: **BRA** (Branch Always), **PHX/PHY** (Push X/Y), **PLX/PLY** (Pull X/Y), **STZ** (Store Zero - 4 addressing modes), **TRB/TSB** (Test and Reset/Set Bits), **WAI** (Wait for Interrupt), **STP** (Stop Processor). Undocumented opcodes are treated as NOPs. |
+| Variant Checking | Instructions execute without variant checks. | 65C02-specific instructions only execute when CPU is in 65C02 mode; they become NOPs in NMOS mode. |
 
-See `src/instruments_implementation.c` for the complete TODO list of upcoming 65C02 instructions.
+*Note: Rockwell bit manipulation instructions (BBR, BBS, RMB, SMB) are not implemented.*
 
 The decimal (BCD) mode N/Z flag behavior is the most commonly encountered difference in practice. Both the carry flag (C) and overflow flag (V) behave identically between variants.
 
@@ -212,9 +213,17 @@ The functional test runner (`tests/6502_functional_test/run_functional_test.c`) 
 The project also includes a small example ROM, with Host tools, which we call the *verification test suite* in `tests/verify_test.c` for basic verifications:
 
 ```bash
+# NMOS 6502 verification
 make verify
 bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
+
+# Build and run 65C02 verification tests
+cd tests/minimal && python3 build_65c02_test.py && cd ../..
+clang -std=c17 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
+bin/verify_65c02_test
 ```
+
+On top of the 6502 test suite, 65C02 test suite also validates all of the new CMOS instructions: BRA, PHX, PHY, PLX, PLY, STZ (all addressing modes), TSB, and TRB.
 
 ## Limitations
 
