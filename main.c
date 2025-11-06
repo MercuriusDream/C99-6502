@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
     printf("C99-6502\n");
     printf("CPU Variant: %s\n",
-           cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502"); // CPU Varient
+           cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502"); // CPU Variant
 
     mem_region_clear(); // Memory Cleanup
     mem_region_add_ram(ram_start, ram_size);
@@ -157,13 +157,13 @@ int main(int argc, char** argv) {
     }
 
     mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, rom_addr); // Setting the Memory Vector
-    printf("Resetted the vector to $%04X\n", rom_addr);
+    printf("Reset the vector to $%04X\n", rom_addr);
 
     mem_region_init(); // Initialize the Memory region
     printf("Memory bus connected\n");
 
-    cpu_reset(); // Reset the CPU stat
-    printf("CPU reset has been completed : \n");
+    cpu_reset(); // Reset the CPU state
+    printf("CPU reset has been completed:\n");
     printf("  PC: $%04X\n", REG.PC);
     printf("  SP: $%02X\n", REG.S);
     printf("  P:  $%02X\n", REG.P);
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
         printf("Trace : Enabled\n");
     }
 
-    printf("R");
+    printf("Running...\n");
     for (int cycle_cnt=1; cycle_cnt<=CPU_TEST_RUN_LIMIT; cycle_cnt++) {
         cpu_step();
         if (!(REG.PC)) {
