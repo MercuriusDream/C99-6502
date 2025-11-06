@@ -18,7 +18,7 @@ int main() {
     mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, 0x8000);
     mem_region_init();
     cpu_reset();
-    cpu_run(1000);
+    cpu_run(100000);
 
     printf("\n65C02 Test Results:\n\n");
 
