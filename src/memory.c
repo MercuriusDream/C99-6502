@@ -21,30 +21,44 @@ void mem_region_clear() {
 int mem_region_add_ram(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
-    MEM_REGION* region = &REGIONS[REGION_COUNT++];
+    MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
     region->END = START + SIZE - 1;
     region->TYPE = MEM_REGION_RAM;
     region->DATA = (MEM_WORD*)calloc(SIZE, sizeof(MEM_WORD));
+
+    if (!region->DATA) {
+        // Failed to allocate memory
+        return -1;
+    }
+
     region->READ_HANDLER = NULL;
     region->WRITE_HANDLER = NULL;
     region->CTX = NULL;
 
+    REGION_COUNT++;
     return 0;
 }
 
 int mem_region_add_rom(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
-    MEM_REGION* region = &REGIONS[REGION_COUNT++];
+    MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
     region->END = START + SIZE - 1;
     region->TYPE = MEM_REGION_ROM;
     region->DATA = (MEM_WORD*)calloc(SIZE, sizeof(MEM_WORD));
+
+    if (!region->DATA) {
+        // Failed to allocate memory
+        return -1;
+    }
+
     region->READ_HANDLER = NULL;
     region->WRITE_HANDLER = NULL;
     region->CTX = NULL;
 
+    REGION_COUNT++;
     return 0;
 }
 

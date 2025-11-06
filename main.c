@@ -130,8 +130,17 @@ int main(int argc, char** argv) {
            cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502"); // CPU Variant
 
     mem_region_clear(); // Memory Cleanup
-    mem_region_add_ram(ram_start, ram_size);
-    mem_region_add_rom(rom_start, rom_size);
+
+    if (mem_region_add_ram(ram_start, ram_size) != 0) {
+        printf("Error: Failed to allocate RAM region\n");
+        return 1;
+    }
+
+    if (mem_region_add_rom(rom_start, rom_size) != 0) {
+        printf("Error: Failed to allocate ROM region\n");
+        return 1;
+    }
+
     printf("Memory map configuration:\n");
     printf("  $%04X-$%04X: RAM (%uKB)\n", ram_start, ram_start + ram_size - 1, ram_size / 1024);
     printf("  $%04X-$%04X: ROM (%uKB)\n\n", rom_start, rom_start + rom_size - 1, rom_size / 1024);

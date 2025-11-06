@@ -1,7 +1,7 @@
 #include "instruments_table.h"
 #include "types.h"
 
-extern const INST INST_TABLE[0x10][0x10] = {
+const INST INST_TABLE[0x10][0x10] = {
     // 0x0_
     {
         {"BRK",ADDR_NONE,REG_NONE,REG_NONE},

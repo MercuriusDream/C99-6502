@@ -60,7 +60,14 @@ int debugger_add_breakpoint(BP_TYPE type, MEM_TWO_WORDS addr, const char* label)
     bp->enabled = 1;
     bp->type = type;
     bp->addr = addr;
-    bp->label = label ? strdup(label) : NULL;
+    if (label) {
+        bp->label = strdup(label);
+        if (!bp->label) {
+            printf("[Debugger] Warning: Failed to allocate memory for breakpoint label\n");
+        }
+    } else {
+        bp->label = NULL;
+    }
 
     printf("[Debugger] Breakpoint #%d set at $%04X", breakpoint_count, addr);
     if (label) {
@@ -160,7 +167,14 @@ int debugger_add_watchpoint(MEM_TWO_WORDS addr, const char* label) {
     wp->enabled = 1;
     wp->addr = addr;
     wp->old_value = bus_read(addr);
-    wp->label = label ? strdup(label) : NULL;
+    if (label) {
+        wp->label = strdup(label);
+        if (!wp->label) {
+            printf("[Debugger] Warning: Failed to allocate memory for watchpoint label\n");
+        }
+    } else {
+        wp->label = NULL;
+    }
 
     printf("[Debugger] Watchpoint #%d set at $%04X (value: $%02X)",
            watchpoint_count, addr, wp->old_value);
@@ -255,9 +269,8 @@ void profiler_record_instruction(MEM_TWO_WORDS pc, MEM_WORD opcode, unsigned int
 
     prof_data.total_cycles += cycles;
     prof_data.instruction_counts[opcode]++;
-    if (pc < PHY_MEM_SIZE) {
-        prof_data.address_exec_counts[pc]++;
-    }
+    // pc is MEM_TWO_WORDS (uint16), so it's always < 65536
+    prof_data.address_exec_counts[pc]++;
 }
 
 void profiler_dump_stats(void) {
