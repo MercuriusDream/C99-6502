@@ -127,20 +127,18 @@ int main(int argc, char** argv) {
 
     printf("C99-6502\n");
     printf("CPU Variant: %s\n",
-           cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502");
+           cpu_variant == CPU_VARIANT_CMOS_65C02 ? "CMOS 65C02" : "NMOS 6502"); // CPU Varient
 
-    // 1. Setup memory regions
-    mem_region_clear();
+    mem_region_clear(); // Memory Cleanup
     mem_region_add_ram(ram_start, ram_size);
     mem_region_add_rom(rom_start, rom_size);
-    printf("Memory map configured:\n");
+    printf("Memory map configuration:\n");
     printf("  $%04X-$%04X: RAM (%uKB)\n", ram_start, ram_start + ram_size - 1, ram_size / 1024);
     printf("  $%04X-$%04X: ROM (%uKB)\n\n", rom_start, rom_start + rom_size - 1, rom_size / 1024);
 
-    // 2. Load ROM
-    if (rom_file) {
+    if (rom_file) { // Loading the ROM file
         if (load_bin_region(rom_file, rom_addr) == 0) {
-            printf("ROM loaded from %s at $%04X.\n", rom_file, rom_addr);
+            printf("ROM loaded from: %s at $%04X.\n", rom_file, rom_addr);
         } else {
             printf("Failed to load ROM from %s\n", rom_file);
             return 1;
@@ -158,35 +156,31 @@ int main(int argc, char** argv) {
         printf("Sample ROM loaded at $%04X.\n", rom_addr);
     }
 
-    // 3. Set reset vector
-    mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, rom_addr);
-    printf("Reset vector set to $%04X.\n", rom_addr);
+    mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, rom_addr); // Setting the Memory Vector
+    printf("Resetted the vector to $%04X\n", rom_addr);
 
-    // 4. Connect bus
-    mem_region_init();
-    printf("Bus connected.\n");
+    mem_region_init(); // Initialize the Memory region
+    printf("Memory bus connected\n");
 
-    // 5. CPU reset
-    cpu_reset();
-    printf("CPU reset complete.\n");
+    cpu_reset(); // Reset the CPU stat
+    printf("CPU reset has been completed : \n");
     printf("  PC: $%04X\n", REG.PC);
     printf("  SP: $%02X\n", REG.S);
     printf("  P:  $%02X\n", REG.P);
-    printf("  A:  $%02X, X: $%02X, Y: $%02X\n\n", REG.A, REG.X, REG.Y);
+    printf("  A:  $%02X, X: $%02X, Y: $%02X\n", REG.A, REG.X, REG.Y);
 
-    // 6. Enable trace if requested
-    if (enable_trace) {
+    if (enable_trace) { // Enable Trace if needed
         trace_set_enabled(1);
-        printf("Trace enabled.\n\n");
+        printf("Trace : Enabled\n");
     }
 
-    // 7. Run
-    printf("Running...\n");
-    if (enable_trace) {
-        // Run step by step with trace until BRK or max cycles
-        cpu_run(10000);
-    } else {
-        cpu_run(100);
+    printf("R");
+    for (int cycle_cnt=1; cycle_cnt<=CPU_TEST_RUN_LIMIT; cycle_cnt++) {
+        cpu_step();
+        if (!(REG.PC)) {
+            printf("Found BRK at Cycle %d, Execution terminated.\n", cycle_cnt);
+            break;
+        }
     }
 
     printf("\nExecution complete.\n");
