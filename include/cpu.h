@@ -7,6 +7,12 @@
 void cpu_set_variant(CPU_VARIANT variant);
 CPU_VARIANT cpu_get_variant();
 
+// CPU state management (for 65C02 WAI and STP)
+void cpu_set_waiting(int waiting);
+void cpu_set_stopped(int stopped);
+int cpu_is_waiting(void);
+int cpu_is_stopped(void);
+
 void cpu_reset();
 void cpu_step();
 void cpu_run(MEM_TWO_WORDS MAX_CYCLES);

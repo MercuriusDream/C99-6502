@@ -14,6 +14,8 @@
 #define CPU_RESET_STATUS 0x24
 #define CPU_RESET_VECTOR_ADDRESS 0xFFFC
 
+#define CPU_TEST_RUN_LIMIT 10000
+
 typedef enum
 {
     CPU_VARIANT_NMOS_6502 = 0,

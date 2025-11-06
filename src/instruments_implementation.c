@@ -5,18 +5,6 @@
 #include "stack.h"
 #include <stdio.h>
 
-// TODO: Implement 65C02-specific instructions:
-// - BRA (Branch Always) - $80
-// - PHX, PHY (Push X/Y to stack) - $DA, $5A
-// - PLX, PLY (Pull X/Y from stack) - $FA, $7A
-// - STZ (Store Zero) - $64, $74, $9C, $9E
-// - TRB, TSB (Test and Reset/Set Bits) - $14, $1C, $04, $0C
-// - BBR, BBS (Branch on Bit Reset/Set) - $0F-$FF range
-// - RMB, SMB (Reset/Set Memory Bit) - $07-$F7 range
-// - WAI (Wait for Interrupt) - $CB
-// - STP (Stop processor) - $DB
-// Note: Currently undocumented NMOS opcodes occupy some of these slots
-
 extern MEM_TWO_WORDS EA;
 extern int HAS_EA;
 extern int BRANCH_TAKEN;
@@ -294,10 +282,7 @@ void BIT(void) {
     if (data & 0x40) SET_FLAG(FLAG_V); else CLR_FLAG(FLAG_V);
 }
 
-// ============================================================================
-// ILLEGAL/UNDOCUMENTED OPCODES
-// These opcodes were not officially documented but are stable on real hardware
-// ============================================================================
+// Undocumented opcodes
 
 // LAX - Load A and X (LDA + LDX combined)
 void LAX(void) {
@@ -377,4 +362,77 @@ void NOP_READ(void) {
     if (HAS_EA) {
         bus_read(EA);  // Read memory but ignore result
     }
+}
+
+// CMOS 65C02 Instructions
+
+// BRA - Branch Always
+void BRA_(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    MEM_TWO_WORDS old_pc = REG.PC;
+    REG.PC = EA;
+    BRANCH_TAKEN = 1;
+    BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00));
+}
+
+// PHX - Push X to stack
+void PHX(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    push8(REG.X);
+}
+
+// PHY - Push Y to stack
+void PHY(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    push8(REG.Y);
+}
+
+// PLX - Pull X from stack
+void PLX(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    REG.X = pop8();
+    set_zn(REG.X);
+}
+
+// PLY - Pull Y from stack
+void PLY(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    REG.Y = pop8();
+    set_zn(REG.Y);
+}
+
+// STZ - Store Zero
+void STZ(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    bus_write(EA, 0x00);
+}
+
+// TRB - Test and Reset Bits
+void TRB(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    MEM_WORD data = bus_read(EA);
+    MEM_WORD result = REG.A & data;
+    if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z);
+    bus_write(EA, data & ~REG.A);
+}
+
+// TSB - Test and Set Bits
+void TSB(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    MEM_WORD data = bus_read(EA);
+    MEM_WORD result = REG.A & data;
+    if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z);
+    bus_write(EA, data | REG.A);
+}
+
+// WAI - Wait for Interrupt
+void WAI(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    cpu_set_waiting(1);
+}
+
+// STP - Stop Processor
+void STP(void) {
+    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
+    cpu_set_stopped(1);
 }

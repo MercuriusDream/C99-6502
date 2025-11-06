@@ -21,12 +21,32 @@ static const INST* META;
 // CPU variant (defaults to NMOS 6502)
 static CPU_VARIANT CPU_VARIANT_MODE = CPU_VARIANT_NMOS_6502;
 
+// CPU state flags for 65C02 WAI and STP instructions
+static int CPU_WAITING = 0;
+static int CPU_STOPPED = 0;
+
 void cpu_set_variant(CPU_VARIANT variant) {
     CPU_VARIANT_MODE = variant;
 }
 
 CPU_VARIANT cpu_get_variant() {
     return CPU_VARIANT_MODE;
+}
+
+void cpu_set_waiting(int waiting) {
+    CPU_WAITING = waiting;
+}
+
+void cpu_set_stopped(int stopped) {
+    CPU_STOPPED = stopped;
+}
+
+int cpu_is_waiting(void) {
+    return CPU_WAITING;
+}
+
+int cpu_is_stopped(void) {
+    return CPU_STOPPED;
 }
 
 static const unsigned char CYCLE_BASE[256] = {
@@ -76,6 +96,9 @@ void cpu_reset() {
 }
 
 void cpu_step() {
+    if (CPU_STOPPED) return;
+    if (CPU_WAITING) return;
+
     MEM_TWO_WORDS pc_before = REG.PC;
     OPCODE = bus_read(REG.PC++);
     META = &INST_TABLE[OPCODE>>4][OPCODE&0x0F];
@@ -105,6 +128,7 @@ void cpu_run(MEM_TWO_WORDS MAX_CYCLES) {
 
 void cpu_irq() {
     if (!GET_FLAG(FLAG_I)) {
+        CPU_WAITING = 0;  // IRQ wakes CPU from WAI
         push16(REG.PC);
         push8(REG.P | FLAG_U);
         SET_FLAG(FLAG_I);
@@ -113,6 +137,7 @@ void cpu_irq() {
 }
 
 void cpu_nmi() {
+    CPU_WAITING = 0;  // NMI wakes CPU from WAI
     push16(REG.PC);
     push8(REG.P | FLAG_U);
     SET_FLAG(FLAG_I);
