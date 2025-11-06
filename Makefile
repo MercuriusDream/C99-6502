@@ -10,11 +10,13 @@ SOURCES=$(wildcard $(SRC_DIR)/*.c)
 MAIN_SRC=main.c
 TEST_SRC=$(TEST_DIR)/minimal/verify_test.c
 FUNCTIONAL_TEST_SRC=$(TEST_DIR)/6502_functional_test/run_functional_test.c
+DEBUG_TEST_SRC=$(TEST_DIR)/debug_test.c
 
 # Output binaries
 TARGET=$(BIN_DIR)/mos6502
 TEST_TARGET=$(BIN_DIR)/verify_test
 FUNCTIONAL_TEST_TARGET=$(BIN_DIR)/functional_test
+DEBUG_TEST_TARGET=$(BIN_DIR)/debug_test
 
 # Default target
 all: $(TARGET)
@@ -37,6 +39,13 @@ functional-test: $(FUNCTIONAL_TEST_TARGET)
 $(FUNCTIONAL_TEST_TARGET): $(SOURCES) $(FUNCTIONAL_TEST_SRC) | $(BIN_DIR)
 	$(CC) $(CFLAGS) $(SOURCES) $(FUNCTIONAL_TEST_SRC) -o $(FUNCTIONAL_TEST_TARGET)
 	@echo "Built $(FUNCTIONAL_TEST_TARGET)"
+
+# Build debug test
+debug-test: $(DEBUG_TEST_TARGET)
+
+$(DEBUG_TEST_TARGET): $(SOURCES) $(DEBUG_TEST_SRC) | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) $(DEBUG_TEST_SRC) -o $(DEBUG_TEST_TARGET)
+	@echo "Built $(DEBUG_TEST_TARGET)"
 
 # Create bin directory
 $(BIN_DIR):
@@ -79,4 +88,8 @@ download-functional-test:
 rom:
 	cd tests/minimal && python3 build_test_rom.py
 
-.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test
+# Run debug test
+run-debug-test: $(DEBUG_TEST_TARGET)
+	$(DEBUG_TEST_TARGET)
+
+.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test

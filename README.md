@@ -2,6 +2,8 @@
 
 [Korean / 한국어](./README_KO.md)
 
+<img width="3000" height="1000" alt="image" src="https://github.com/user-attachments/assets/93fb6303-551e-42a6-aa75-63211b8c0d91" />
+
 The Systems Software isn't, indeed, that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to understand the most of lecture.
 
 ## Introduction
@@ -185,6 +187,78 @@ The decimal (BCD) mode N/Z flag behavior is the most commonly encountered differ
 All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: **LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA**, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
 
 *Note: In 65C02 mode, most undocumented opcodes were officially changed to NOPs. The current implementation treats them as NOPs in both modes, which is functionally correct for 65C02 but means some NMOS-specific undocumented opcodes won't work in NMOS mode if they're unimplemented.*
+
+## Debugging and Profiling Tools
+
+The emulator includes a comprehensive debugging and profiling system to help analyze program execution, find bugs, and optimize code.
+
+### Features
+
+- **Breakpoints**: Set execution, read, write, or access breakpoints at specific memory addresses
+- **Watchpoints**: Monitor memory locations and get notified when values change
+- **Cycle Profiling**: Track total cycle counts and per-instruction execution frequency
+- **Hotspot Analysis**: Identify the most frequently executed code addresses
+- **Memory Inspection**: Hex dumps with ASCII representation and disassembly views
+- **Register & Stack Inspection**: View complete CPU state including flag breakdown
+- **Memory Search**: Find byte patterns anywhere in memory
+
+### Example Usage
+
+```c
+#include "debugger.h"
+
+// Initialize debugger
+debugger_init();
+
+// Set breakpoints
+debugger_add_breakpoint(BP_TYPE_EXEC, 0x8000, "main_loop");
+debugger_add_breakpoint(BP_TYPE_WRITE, 0x0200, "output_port");
+debugger_list_breakpoints();
+
+// Add watchpoints
+debugger_add_watchpoint(0x0200, "counter_variable");
+
+// Enable profiling
+profiler_init();
+
+// During execution, check breakpoints
+if (debugger_check_breakpoint(BP_TYPE_EXEC, REG.PC)) {
+    debugger_dump_registers();
+}
+
+// Check watchpoints after each step
+debugger_check_watchpoints();
+
+// Record profiling data (normally done automatically)
+profiler_record_instruction(pc, opcode, cycles);
+
+// After execution - view statistics
+profiler_dump_stats();           // Show instruction frequency
+profiler_dump_hotspots(10);      // Show top 10 executed addresses
+
+// Memory inspection
+debugger_hexdump(0x8000, 256);        // Hex dump with ASCII
+debugger_disassemble(0x8000, 20);     // Disassemble 20 instructions
+debugger_dump_stack();                 // View stack contents
+debugger_dump_registers();             // Show all registers and flags
+
+// Memory search
+MEM_WORD pattern[] = { 0xA9, 0x42 };  // LDA #$42
+debugger_search_memory(0x8000, 0xFFFF, pattern, 2);
+
+// Cleanup
+debugger_cleanup();
+```
+
+### Running the Debug Test
+
+```bash
+# Build and run the comprehensive debug test
+make debug-test
+./bin/debug_test
+```
+
+The debug test demonstrates all debugging features with a sample program that loops, modifies memory, and performs arithmetic operations.
 
 ## Testing
 
