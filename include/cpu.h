@@ -13,6 +13,7 @@ void cpu_set_stopped(int stopped);
 int cpu_is_waiting(void);
 int cpu_is_stopped(void);
 
+void cpu_init(void);
 void cpu_reset();
 void cpu_step();
 void cpu_run(MEM_TWO_WORDS MAX_CYCLES);

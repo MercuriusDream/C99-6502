@@ -182,6 +182,65 @@ The emulator supports both NMOS 6502 and CMOS 65C02 modes with the following beh
 
 The decimal (BCD) mode N/Z flag behavior is the most commonly encountered difference in practice. Both the carry flag (C) and overflow flag (V) behave identically between variants.
 
+## Interrupt Controller
+
+The emulator includes a comprehensive interrupt controller that accurately models 6502 interrupt behavior:
+
+### Features
+
+- **BRK Instruction**: Software interrupt with B flag set
+- **IRQ (Maskable)**: Level-triggered, respects I flag
+- **NMI (Non-Maskable)**: Edge-triggered (falling edge), always executes
+- **Edge Detection**: NMI triggers on 1→0 transition
+- **Interrupt Priority**: NMI can hijack IRQ sequence
+- **Interrupt History**: Records last 32 interrupts for debugging
+- **Statistics Tracking**: Counts total IRQs, NMIs, and BRKs
+- **7-Cycle Sequence**: Models hardware-accurate interrupt timing
+
+### Interrupt Types
+
+| Type | Trigger | Maskable | Vector | B Flag |
+|------|---------|----------|--------|--------|
+| **BRK** | Software | No | $FFFE | Set (1) |
+| **IRQ** | Level | Yes (I flag) | $FFFE | Clear (0) |
+| **NMI** | Edge (falling) | No | $FFFA | Clear (0) |
+
+### Usage Example
+
+```c
+#include "interrupt.h"
+
+// Initialize interrupt controller
+cpu_init();  // Automatically initializes interrupts
+
+// Trigger IRQ (level-triggered)
+interrupt_set_irq(1);  // Assert IRQ line
+// CPU will service IRQ if I flag is clear
+
+// Trigger NMI (edge-triggered)
+interrupt_set_nmi(1);  // Set NMI line high
+interrupt_set_nmi(0);  // Create falling edge → triggers NMI
+
+// Check for pending interrupts
+INTERRUPT_TYPE type = interrupt_poll();
+if (type == INT_NMI) {
+    // NMI is pending
+}
+
+// View interrupt history
+interrupt_dump_history();
+interrupt_dump_stats();
+```
+
+### Running the Interrupt Test
+
+```bash
+make interrupt-test
+./bin/interrupt_test
+```
+
+The interrupt test demonstrates BRK, IRQ, NMI, edge detection, priority handling, and history tracking.
+
 ## Supported Instructions
 
 All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: **LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA**, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.

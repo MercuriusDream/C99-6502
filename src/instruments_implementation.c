@@ -3,6 +3,7 @@
 #include "bus.h"
 #include "cpu.h"
 #include "stack.h"
+#include "interrupt.h"
 #include <stdio.h>
 
 extern MEM_TWO_WORDS EA;
@@ -177,12 +178,11 @@ void SED(void) { SET_FLAG(FLAG_D); }
 void CLV(void) { CLR_FLAG(FLAG_V); }
 void NOP(void) { }
 void BRK(void) {
-    // BRK: push PC+1 (since PC already incremented past opcode), push P with B flag, set I, jump to IRQ vector
+    // BRK software interrupt
     // Note: PC is already pointing to the byte after BRK opcode when this handler executes
-    push16(REG.PC + 1);  // Push return address (BRK location + 2)
-    push8(REG.P | FLAG_B | FLAG_U);
-    SET_FLAG(FLAG_I);
-    REG.PC = bus_read16(0xFFFE);
+    // The interrupt controller will handle the full sequence
+    interrupt_begin(INT_BRK);
+    interrupt_step_cycle();  // Execute interrupt sequence
 }
 
 void JMP(void) { REG.PC = EA; }
