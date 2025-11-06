@@ -6,7 +6,7 @@ The Systems Software isn't, indeed, that sophomore-friendly. So I decided to bui
 
 ## Introduction
 
-This project is a cycle-accurate MOS 6502 processor emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
+This project is a cycle-accurate MOS 6502 (including its variants) emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
 
 The emulator supports the complete instruction set with stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
 
