@@ -129,4 +129,12 @@ run-test-65c02: $(TEST_65C02_TARGET)
 run-verify-65c02: $(VERIFY_65C02_TARGET)
 	$(VERIFY_65C02_TARGET)
 
-.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test test-65c02 run-test-65c02 verify-65c02 run-verify-65c02
+# Run reset test
+run-reset-test: reset-test
+	$(BIN_DIR)/verify_reset_test
+
+reset-test: $(SOURCES) tests/minimal/verify_reset.c | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) tests/minimal/verify_reset.c -o $(BIN_DIR)/verify_reset_test
+	@echo "Built Reset Test"
+
+.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test test-65c02 run-test-65c02 verify-65c02 run-verify-65c02 run-reset-test
