@@ -93,6 +93,9 @@ void cpu_init() {
 }
 
 void cpu_reset() {
+    REG.A = 0;
+    REG.X = 0;
+    REG.Y = 0;
     REG.S = CPU_RESET_STACK_POINTER;
     REG.P = CPU_RESET_STATUS;
     REG.PC = bus_read16(CPU_RESET_VECTOR_ADDRESS);
