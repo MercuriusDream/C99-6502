@@ -28,9 +28,7 @@ int main() {
     }
     mem_region_init();
 
-    // ========================================================================
     // Test 1: BRK Instruction (Software Interrupt)
-    // ========================================================================
     printf("--- Test 1: BRK Instruction ---\n");
 
     // Program that executes BRK
@@ -71,9 +69,7 @@ int main() {
            REG.PC, REG.A, bus_read(0x0200));
     printf("Expected: A=$99 (from interrupt handler)\n");
 
-    // ========================================================================
     // Test 2: IRQ (Maskable Interrupt)
-    // ========================================================================
     printf("\n--- Test 2: IRQ (Maskable Interrupt) ---\n");
 
     // Simple program that loops
@@ -118,9 +114,7 @@ int main() {
 
     printf("After IRQ: Mem[$0211]=$%02X (expected $AA)\n", bus_read(0x0211));
 
-    // ========================================================================
     // Test 3: NMI (Non-Maskable Interrupt, Edge-Triggered)
-    // ========================================================================
     printf("\n--- Test 3: NMI (Non-Maskable Interrupt) ---\n");
 
     // NMI handler
@@ -143,9 +137,7 @@ int main() {
 
     printf("After NMI: Mem[$0212]=$%02X (expected $BB)\n", bus_read(0x0212));
 
-    // ========================================================================
     // Test 4: Multiple Interrupts (NMI Priority)
-    // ========================================================================
     printf("\n--- Test 4: Multiple Interrupts ---\n");
 
     // Test that NMI has priority over IRQ
@@ -157,9 +149,7 @@ int main() {
     printf("With both IRQ and NMI pending: %s has priority\n",
            pending == INT_NMI ? "NMI" : "IRQ");
 
-    // ========================================================================
     // Test 5: Interrupt History and Statistics
-    // ========================================================================
     printf("\n--- Test 5: Interrupt History & Statistics ---\n");
 
     interrupt_dump_history();

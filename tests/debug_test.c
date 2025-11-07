@@ -65,31 +65,23 @@ int main(int argc, char** argv) {
     // Reset CPU
     cpu_reset();
 
-    // ========================================================================
     // Test 1: Basic Disassembly
-    // ========================================================================
     printf("\n--- Test 1: Disassembly ---\n");
     debugger_disassemble(0x8000, 15);
 
-    // ========================================================================
     // Test 2: Breakpoints
-    // ========================================================================
     printf("\n--- Test 2: Breakpoints ---\n");
     debugger_add_breakpoint(BP_TYPE_EXEC, 0x8004, "Loop start");
     debugger_add_breakpoint(BP_TYPE_EXEC, 0x8016, "Loop end");
     debugger_list_breakpoints();
 
-    // ========================================================================
     // Test 3: Watchpoints
-    // ========================================================================
     printf("\n--- Test 3: Watchpoints ---\n");
     debugger_add_watchpoint(0x0200, "Loop counter");
     debugger_add_watchpoint(0x0201, "Accumulator storage");
     debugger_list_watchpoints();
 
-    // ========================================================================
     // Test 4: Execution with profiling
-    // ========================================================================
     printf("\n--- Test 4: Execution with Profiling ---\n");
     profiler_init();
 
@@ -119,32 +111,24 @@ int main(int argc, char** argv) {
         }
     }
 
-    // ========================================================================
     // Test 5: Final State Inspection
-    // ========================================================================
     printf("\n--- Test 5: Final State Inspection ---\n");
     debugger_dump_registers();
 
     printf("\n--- Test 6: Memory Inspection ---\n");
     debugger_hexdump(0x0200, 16);
 
-    // ========================================================================
     // Test 7: Profiling Statistics
-    // ========================================================================
     printf("\n--- Test 7: Profiling Statistics ---\n");
     profiler_dump_stats();
     profiler_dump_hotspots(10);
 
-    // ========================================================================
     // Test 8: Memory Search
-    // ========================================================================
     printf("\n--- Test 8: Memory Search ---\n");
     MEM_WORD pattern[] = { 0xA9, 0x42 };  // LDA #$42
     debugger_search_memory(0x8000, 0x8020, pattern, 2);
 
-    // ========================================================================
     // Test 9: Stack Inspection
-    // ========================================================================
     printf("\n--- Test 9: Stack Inspection ---\n");
     debugger_dump_stack();
 

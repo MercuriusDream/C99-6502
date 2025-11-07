@@ -20,9 +20,9 @@ static int profiling_enabled = 0;
 static int interactive_mode = 0;
 static int debugger_paused = 0;
 
-// ============================================================================
+
 // Initialization and Cleanup
-// ============================================================================
+
 
 void debugger_init(void) {
     memset(breakpoints, 0, sizeof(breakpoints));
@@ -46,9 +46,9 @@ void debugger_cleanup(void) {
     }
 }
 
-// ============================================================================
+
 // Breakpoint Management
-// ============================================================================
+
 
 int debugger_add_breakpoint(BP_TYPE type, MEM_TWO_WORDS addr, const char* label) {
     if (breakpoint_count >= MAX_BREAKPOINTS) {
@@ -153,9 +153,9 @@ void debugger_clear_breakpoints(void) {
     printf("[Debugger] All breakpoints cleared\n");
 }
 
-// ============================================================================
+
 // Watchpoint Management
-// ============================================================================
+
 
 int debugger_add_watchpoint(MEM_TWO_WORDS addr, const char* label) {
     if (watchpoint_count >= MAX_WATCHPOINTS) {
@@ -255,9 +255,9 @@ void debugger_clear_watchpoints(void) {
     printf("[Debugger] All watchpoints cleared\n");
 }
 
-// ============================================================================
+
 // Profiling Functions
-// ============================================================================
+
 
 void profiler_init(void) {
     memset(&prof_data, 0, sizeof(prof_data));
@@ -355,9 +355,9 @@ PROFILING_DATA* profiler_get_data(void) {
     return &prof_data;
 }
 
-// ============================================================================
+
 // Memory Inspection
-// ============================================================================
+
 
 void debugger_hexdump(MEM_TWO_WORDS start_addr, MEM_TWO_WORDS length) {
     printf("[Debugger] Memory Dump from $%04X (length: %u bytes):\n",
@@ -450,9 +450,9 @@ void debugger_dump_stack(void) {
     }
 }
 
-// ============================================================================
+
 // Interactive Debugger Control
-// ============================================================================
+
 
 void debugger_set_interactive(int enabled) {
     interactive_mode = enabled;
@@ -474,9 +474,9 @@ void debugger_continue(void) {
     debugger_paused = 0;
 }
 
-// ============================================================================
+
 // Memory Search
-// ============================================================================
+
 
 int debugger_search_memory(MEM_TWO_WORDS start, MEM_TWO_WORDS end,
                            const MEM_WORD* pattern, MEM_TWO_WORDS pattern_len) {

@@ -8,9 +8,9 @@
 static INTERRUPT_CONTROLLER ic;
 static unsigned long long global_cycle_count = 0;
 
-// ============================================================================
+
 // Initialization
-// ============================================================================
+
 
 void interrupt_init(void) {
     memset(&ic, 0, sizeof(ic));
@@ -29,9 +29,9 @@ void interrupt_init(void) {
     ic.total_brks = 0;
 }
 
-// ============================================================================
+
 // Interrupt Line Control
-// ============================================================================
+
 
 void interrupt_set_irq(int active) {
     ic.irq_line_prev = ic.irq_line;
@@ -48,9 +48,9 @@ void interrupt_set_nmi(int active) {
     }
 }
 
-// ============================================================================
+
 // Interrupt Polling and Detection
-// ============================================================================
+
 
 INTERRUPT_TYPE interrupt_poll(void) {
     global_cycle_count++;
@@ -68,9 +68,9 @@ INTERRUPT_TYPE interrupt_poll(void) {
     return INT_NONE;
 }
 
-// ============================================================================
+
 // Interrupt Sequence
-// ============================================================================
+
 
 static void record_interrupt(INTERRUPT_TYPE type, MEM_TWO_WORDS pc, MEM_WORD p) {
     INTERRUPT_EVENT* event = &ic.history[ic.history_index];
@@ -205,9 +205,9 @@ INTERRUPT_TYPE interrupt_get_current(void) {
     return ic.current_interrupt;
 }
 
-// ============================================================================
+
 // Debugging and History
-// ============================================================================
+
 
 void interrupt_dump_history(void) {
     printf("\n[Interrupt Controller] Interrupt History (last %d):\n", ic.history_count);

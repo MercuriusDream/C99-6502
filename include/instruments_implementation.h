@@ -63,15 +63,15 @@ void RTI(void);
 void BIT(void);
 
 // Illegal/Undocumented opcodes (stable on real hardware)
-void LAX(void);   // LDA + LDX combined
-void SAX(void);   // Store A AND X
-void DCP(void);   // DEC + CMP
-void ISC(void);   // INC + SBC
-void SLO(void);   // ASL + ORA
-void RLA(void);   // ROL + AND
-void SRE(void);   // LSR + EOR
-void RRA(void);   // ROR + ADC
-void NOP_READ(void); // NOP that reads memory
+void LAX(void);
+void SAX(void);
+void DCP(void);
+void ISC(void);
+void SLO(void);
+void RLA(void);
+void SRE(void);
+void RRA(void);
+void NOP_READ(void);
 
 // CMOS 65C02 instructions
 void BRA_(void);
@@ -84,5 +84,11 @@ void TRB(void);
 void TSB(void);
 void WAI(void);
 void STP(void);
+
+// Rockwell/WDC 65C02 bit manipulation instructions
+void RMB(void);
+void SMB(void);
+void BBR_(void);
+void BBS_(void);
 
 #endif

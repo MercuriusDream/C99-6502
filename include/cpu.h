@@ -3,6 +3,9 @@
 
 #include "types.h"
 
+extern MEM_WORD OPCODE;
+extern SIGNED_MEM_WORD REL_OFFSET;
+
 // CPU variant configuration
 void cpu_set_variant(CPU_VARIANT variant);
 CPU_VARIANT cpu_get_variant();

@@ -73,10 +73,16 @@ MEM_TWO_WORDS addr_rel() {
     return (MEM_TWO_WORDS)REG.PC + offset;
 }
 
+MEM_TWO_WORDS addr_zprel() {
+    MEM_WORD zp_addr = fetch8();
+    REL_OFFSET = (SIGNED_MEM_WORD)fetch8();
+    return (MEM_TWO_WORDS)zp_addr;
+}
+
 MEM_TWO_WORDS addr_resolve(ADDR_MODE mode, int* page_cross, int* has_ea) {
     if (page_cross) *page_cross = 0;
     if (has_ea) *has_ea = 1;
-    
+
     switch (mode) {
         case ADDR_ZP:   return addr_zp();
         case ADDR_ZPX:  return addr_zpx();
@@ -87,12 +93,14 @@ MEM_TWO_WORDS addr_resolve(ADDR_MODE mode, int* page_cross, int* has_ea) {
         case ADDR_IND:  return addr_ind();
         case ADDR_INDX: return addr_indx();
         case ADDR_INDY: return addr_indy(page_cross);
-        case ADDR_IMM:   
+        case ADDR_IMM:
             if (has_ea) *has_ea = 0;
             return addr_imm();
         case ADDR_REL:
             if (has_ea) *has_ea = 0;
             return addr_rel();
+        case ADDR_ZPREL:
+            return addr_zprel();
         case ADDR_ACC:
             if (has_ea) *has_ea = 0;
             return 0;

@@ -19,6 +19,8 @@ TEST_TARGET=$(BIN_DIR)/verify_test
 FUNCTIONAL_TEST_TARGET=$(BIN_DIR)/functional_test
 DEBUG_TEST_TARGET=$(BIN_DIR)/debug_test
 INTERRUPT_TEST_TARGET=$(BIN_DIR)/interrupt_test
+TEST_65C02_TARGET=$(BIN_DIR)/test_65c02
+VERIFY_65C02_TARGET=$(BIN_DIR)/verify_65c02_test
 
 # Default target
 all: $(TARGET)
@@ -55,6 +57,20 @@ interrupt-test: $(INTERRUPT_TEST_TARGET)
 $(INTERRUPT_TEST_TARGET): $(SOURCES) $(INTERRUPT_TEST_SRC) | $(BIN_DIR)
 	$(CC) $(CFLAGS) $(SOURCES) $(INTERRUPT_TEST_SRC) -o $(INTERRUPT_TEST_TARGET)
 	@echo "Built $(INTERRUPT_TEST_TARGET)"
+
+# Build 65C02 extended test
+test-65c02: $(TEST_65C02_TARGET)
+
+$(TEST_65C02_TARGET): $(SOURCES) $(TEST_DIR)/6502_functional_test/run_65c02_test.c | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) $(TEST_DIR)/6502_functional_test/run_65c02_test.c -o $(TEST_65C02_TARGET)
+	@echo "Built $(TEST_65C02_TARGET)"
+
+# Build 65C02 verification test
+verify-65c02: $(VERIFY_65C02_TARGET)
+
+$(VERIFY_65C02_TARGET): $(SOURCES) $(TEST_DIR)/minimal/verify_65c02_test.c | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) $(TEST_DIR)/minimal/verify_65c02_test.c -o $(VERIFY_65C02_TARGET)
+	@echo "Built $(VERIFY_65C02_TARGET)"
 
 # Create bin directory
 $(BIN_DIR):
@@ -105,4 +121,12 @@ run-debug-test: $(DEBUG_TEST_TARGET)
 run-interrupt-test: $(INTERRUPT_TEST_TARGET)
 	$(INTERRUPT_TEST_TARGET)
 
-.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test
+# Run 65C02 extended test
+run-test-65c02: $(TEST_65C02_TARGET)
+	$(TEST_65C02_TARGET)
+
+# Run 65C02 verification test
+run-verify-65c02: $(VERIFY_65C02_TARGET)
+	$(VERIFY_65C02_TARGET)
+
+.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test test-65c02 run-test-65c02 verify-65c02 run-verify-65c02

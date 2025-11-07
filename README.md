@@ -8,7 +8,9 @@ The Systems Software isn't, indeed, that sophomore-friendly. So I decided to bui
 
 ## Introduction
 
-This project is a cycle-accurate MOS 6502 (including its variants) emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
+*TL;DR: C99-6502 is a MOS 6502 emulator, written in C99, which supports the emulation of both NMOS and CMOS varients.*
+
+This project is a cycle-accurate MOS 6502 emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
 
 The emulator supports the complete instruction set with stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
 
@@ -17,6 +19,8 @@ Memory configuration uses a region-based system where the address space is divid
 The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02.
 
 The CMOS 65C02 implementation includes all new instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), and `STP` (Stop Processor).
+
+Additionally, all Rockwell/WDC 65C02 bit manipulation instructions are fully implemented: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), and `BBS0-7` (Branch on Bit Set).
 
 ## Getting Started
 
@@ -173,14 +177,12 @@ The emulator supports both NMOS 6502 and CMOS 65C02 modes with the following beh
 
 | Aspect | NMOS 6502 | CMOS 65C02 |
 | ------ | --------- | ----------- |
-| BCD (Decimal) Mode Flags | N and Z flags reflect the binary result before BCD adjustment; V is computed from the binary operation. | N and Z flags reflect the adjusted decimal result; V is computed from the binary operation. |
+| BCD (Decimal) Mode Flags | `N` and `Z` flags reflect the binary result before BCD adjustment; `V` is computed from the binary operation. | `N` and `Z` flags reflect the adjusted decimal result; `V` is computed from the binary operation. |
 | Indirect `JMP` at `$xxFF` | `JMP ($xxFF)` wraps within the page, which, reads high byte from `$xx00` of the same page. | Page-crossing bug is fixed; `JMP ($xxFF)` reads the high byte from the next page. |
-| Instruction Set | Base 6502 instruction set (56 official opcodes), including supported NMOS undocumented opcodes (LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA). | Base 6502 instruction set plus 10 new CMOS instructions: **BRA** (Branch Always), **PHX/PHY** (Push X/Y), **PLX/PLY** (Pull X/Y), **STZ** (Store Zero - 4 addressing modes), **TRB/TSB** (Test and Reset/Set Bits), **WAI** (Wait for Interrupt), **STP** (Stop Processor). Undocumented opcodes are treated as NOPs. |
+| Instruction Set | Base 6502 instruction set (56 official opcodes), including supported NMOS undocumented opcodes (`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`). | Base 6502 instruction set plus 10 new CMOS instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero - 4 addressing modes), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), `STP` (Stop Processor). Also includes 32 Rockwell/WDC bit manipulation instructions: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), `BBS0-7` (Branch on Bit Set). Undocumented opcodes are treated as NOPs. |
 | Variant Checking | Instructions execute without variant checks. | 65C02-specific instructions only execute when CPU is in 65C02 mode; they become NOPs in NMOS mode. |
 
-*Note: Rockwell bit manipulation instructions (BBR, BBS, RMB, SMB) are not implemented.*
-
-The decimal (BCD) mode N/Z flag behavior is the most commonly encountered difference in practice. Both the carry flag (C) and overflow flag (V) behave identically between variants.
+The decimal (BCD) mode `N`/`Z` flag behavior is the most commonly encountered difference in practice. Both the carry flag (`C`) and overflow flag (`V`) behave identically between variants.
 
 ## Interrupt Controller
 
@@ -188,22 +190,22 @@ The emulator includes a comprehensive interrupt controller that accurately model
 
 ### Features
 
-- **BRK Instruction**: Software interrupt with B flag set
-- **IRQ (Maskable)**: Level-triggered, respects I flag
-- **NMI (Non-Maskable)**: Edge-triggered (falling edge), always executes
-- **Edge Detection**: NMI triggers on 1→0 transition
-- **Interrupt Priority**: NMI can hijack IRQ sequence
+- **`BRK` Instruction**: Software interrupt with `B` flag set
+- **`IRQ` (Maskable)**: Level-triggered, respects `I` flag
+- **`NMI` (Non-Maskable)**: Edge-triggered (falling edge), always executes
+- **Edge Detection**: `NMI` triggers on 1→0 transition
+- **Interrupt Priority**: `NMI` can hijack `IRQ` sequence
 - **Interrupt History**: Records last 32 interrupts for debugging
-- **Statistics Tracking**: Counts total IRQs, NMIs, and BRKs
+- **Statistics Tracking**: Counts total `IRQ`s, `NMI`s, and `BRK`s
 - **7-Cycle Sequence**: Models hardware-accurate interrupt timing
 
 ### Interrupt Types
 
 | Type | Trigger | Maskable | Vector | B Flag |
 |------|---------|----------|--------|--------|
-| **BRK** | Software | No | $FFFE | Set (1) |
-| **IRQ** | Level | Yes (I flag) | $FFFE | Clear (0) |
-| **NMI** | Edge (falling) | No | $FFFA | Clear (0) |
+| `BRK` | Software | No | `$FFFE` | Set (1) |
+| `IRQ` | Level | Yes (`I` flag) | `$FFFE` | Clear (0) |
+| `NMI` | Edge (falling) | No | `$FFFA` | Clear (0) |
 
 ### Usage Example
 
@@ -243,7 +245,12 @@ The interrupt test demonstrates BRK, IRQ, NMI, edge detection, priority handling
 
 ## Supported Instructions
 
-All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: **LAX, SAX, DCP, ISC, SLO, RLA, SRE, RRA**, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
+All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: `LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
+
+In 65C02 mode, all standard WDC 65C02 instructions are supported, plus the complete set of Rockwell/WDC bit manipulation extensions:
+
+- **Standard 65C02**: `BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (4 addressing modes), `TRB`, `TSB`, `WAI`, `STP`
+- **Rockwell/WDC Bit Operations**: `RMB0-7`, `SMB0-7`, `BBR0-7`, `BBS0-7` (32 instructions total)
 
 *Note: In 65C02 mode, most undocumented opcodes were officially changed to NOPs. The current implementation treats them as NOPs in both modes, which is functionally correct for 65C02 but means some NMOS-specific undocumented opcodes won't work in NMOS mode if they're unimplemented.*
 
