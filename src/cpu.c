@@ -7,6 +7,7 @@
 #include "instruments_handlers.h"
 #include "stack.h"
 #include "trace.h"
+#include "interrupt.h"
 
 extern const instr_fn INSTR_HANDLERS[256];
 
@@ -15,8 +16,9 @@ T_REGISTER REG;
 T_BUS BUS;
 
 static MEM_TWO_WORDS CYCLES;
-static MEM_WORD OPCODE;
+MEM_WORD OPCODE;
 static const INST* META;
+SIGNED_MEM_WORD REL_OFFSET;
 
 // CPU variant (defaults to NMOS 6502)
 static CPU_VARIANT CPU_VARIANT_MODE = CPU_VARIANT_NMOS_6502;
@@ -87,6 +89,7 @@ void set_zn(MEM_WORD V) {
 }
 
 void cpu_init() {
+    interrupt_init();  // Initialize interrupt controller
 }
 
 void cpu_reset() {
@@ -127,21 +130,24 @@ void cpu_run(MEM_TWO_WORDS MAX_CYCLES) {
 }
 
 void cpu_irq() {
-    if (!GET_FLAG(FLAG_I)) {
-        CPU_WAITING = 0;  // IRQ wakes CPU from WAI
-        push16(REG.PC);
-        push8(REG.P | FLAG_U);
-        SET_FLAG(FLAG_I);
-        REG.PC = bus_read16(0xFFFE);
+    // Trigger IRQ via interrupt controller
+    interrupt_set_irq(1);  // Assert IRQ line
+    INTERRUPT_TYPE type = interrupt_poll();
+    if (type == INT_IRQ) {
+        interrupt_begin(INT_IRQ);
+        interrupt_step_cycle();
     }
 }
 
 void cpu_nmi() {
-    CPU_WAITING = 0;  // NMI wakes CPU from WAI
-    push16(REG.PC);
-    push8(REG.P | FLAG_U);
-    SET_FLAG(FLAG_I);
-    REG.PC = bus_read16(0xFFFA);
+    // Trigger NMI via interrupt controller (edge-triggered)
+    interrupt_set_nmi(1);  // Assert NMI line (high)
+    interrupt_set_nmi(0);  // Deassert to create falling edge
+    INTERRUPT_TYPE type = interrupt_poll();
+    if (type == INT_NMI) {
+        interrupt_begin(INT_NMI);
+        interrupt_step_cycle();
+    }
 }
 
 MEM_WORD fetch8() {

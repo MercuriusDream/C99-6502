@@ -3,6 +3,7 @@
 #include "bus.h"
 #include "cpu.h"
 #include "stack.h"
+#include "interrupt.h"
 #include <stdio.h>
 
 extern MEM_TWO_WORDS EA;
@@ -36,7 +37,7 @@ void TXS(void) { REG.S = REG.X; }
 void PHA(void) { push8(REG.A); }
 void PLA(void) { REG.A = pop8(); set_zn(REG.A); }
 void PHP(void) { push8(REG.P | FLAG_B | FLAG_U); }
-void PLP(void) { REG.P = pop8() & ~(FLAG_B | FLAG_U); }
+void PLP(void) { REG.P = (pop8() & ~FLAG_B) | FLAG_U; }
 
 void INX(void) { REG.X = (REG.X + 1) & 0xFF; set_zn(REG.X); }
 void DEX(void) { REG.X = (REG.X - 1) & 0xFF; set_zn(REG.X); }
@@ -177,12 +178,11 @@ void SED(void) { SET_FLAG(FLAG_D); }
 void CLV(void) { CLR_FLAG(FLAG_V); }
 void NOP(void) { }
 void BRK(void) {
-    // BRK: push PC+1 (since PC already incremented past opcode), push P with B flag, set I, jump to IRQ vector
+    // BRK software interrupt
     // Note: PC is already pointing to the byte after BRK opcode when this handler executes
-    push16(REG.PC + 1);  // Push return address (BRK location + 2)
-    push8(REG.P | FLAG_B | FLAG_U);
-    SET_FLAG(FLAG_I);
-    REG.PC = bus_read16(0xFFFE);
+    // The interrupt controller will handle the full sequence
+    interrupt_begin(INT_BRK);
+    interrupt_step_cycle();  // Execute interrupt sequence
 }
 
 void JMP(void) { REG.PC = EA; }
@@ -365,74 +365,19 @@ void NOP_READ(void) {
 }
 
 // CMOS 65C02 Instructions
+void BRA_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_TWO_WORDS old_pc = REG.PC; REG.PC = EA; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); }
+void PHX(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; push8(REG.X); }
+void PHY(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; push8(REG.Y); }
+void PLX(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; REG.X = pop8(); set_zn(REG.X); }
+void PLY(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; REG.Y = pop8(); set_zn(REG.Y); }
+void STZ(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; bus_write(EA, 0x00); }
+void TRB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD data = bus_read(EA); MEM_WORD result = REG.A & data; if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z); bus_write(EA, data & ~REG.A); }
+void TSB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD data = bus_read(EA); MEM_WORD result = REG.A & data; if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z); bus_write(EA, data | REG.A); }
+void WAI(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; cpu_set_waiting(1); }
+void STP(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; cpu_set_stopped(1); }
 
-// BRA - Branch Always
-void BRA_(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    MEM_TWO_WORDS old_pc = REG.PC;
-    REG.PC = EA;
-    BRANCH_TAKEN = 1;
-    BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00));
-}
-
-// PHX - Push X to stack
-void PHX(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    push8(REG.X);
-}
-
-// PHY - Push Y to stack
-void PHY(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    push8(REG.Y);
-}
-
-// PLX - Pull X from stack
-void PLX(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    REG.X = pop8();
-    set_zn(REG.X);
-}
-
-// PLY - Pull Y from stack
-void PLY(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    REG.Y = pop8();
-    set_zn(REG.Y);
-}
-
-// STZ - Store Zero
-void STZ(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    bus_write(EA, 0x00);
-}
-
-// TRB - Test and Reset Bits
-void TRB(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    MEM_WORD data = bus_read(EA);
-    MEM_WORD result = REG.A & data;
-    if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z);
-    bus_write(EA, data & ~REG.A);
-}
-
-// TSB - Test and Set Bits
-void TSB(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    MEM_WORD data = bus_read(EA);
-    MEM_WORD result = REG.A & data;
-    if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z);
-    bus_write(EA, data | REG.A);
-}
-
-// WAI - Wait for Interrupt
-void WAI(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    cpu_set_waiting(1);
-}
-
-// STP - Stop Processor
-void STP(void) {
-    if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return;
-    cpu_set_stopped(1);
-}
+// Rockwell/WDC 65C02 Bit Manipulation Instructions
+void RMB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); bus_write(EA, data & ~(1 << bit)); }
+void SMB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); bus_write(EA, data | (1 << bit)); }
+void BBR_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); if ((data & (1 << bit)) == 0) { MEM_TWO_WORDS old_pc = REG.PC; REG.PC = (REG.PC + REL_OFFSET) & 0xFFFF; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); } }
+void BBS_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); if ((data & (1 << bit)) != 0) { MEM_TWO_WORDS old_pc = REG.PC; REG.PC = (REG.PC + REL_OFFSET) & 0xFFFF; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); } }

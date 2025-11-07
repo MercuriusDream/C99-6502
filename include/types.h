@@ -87,7 +87,8 @@ typedef enum
     ADDR_IND,
     ADDR_INDX,
     ADDR_INDY,
-    ADDR_REL
+    ADDR_REL,
+    ADDR_ZPREL
 } ADDR_MODE;
 
 typedef enum

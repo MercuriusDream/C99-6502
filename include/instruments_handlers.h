@@ -4,7 +4,9 @@
 #include "types.h"
 
 typedef void (*instr_fn)(void);
-static void op_illegal();
+
+// Illegal opcode handler
+void op_illegal(void);
 
 extern const instr_fn INSTR_HANDLERS[256];
 
