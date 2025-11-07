@@ -182,16 +182,140 @@ ROM 영역은 자동적으로 쓰기 보호되며, ROM 주소로의 쓰기는 �
 
 *첨언: 두 경우 모두 올림 플래그 (`C`)와 오버플로우 플래그 (`O`)는 동일하게 작동합니다.*
 
+## 인터럽트 컨트롤러
+
+본 에뮬레이터는 6502 인터럽트 동작을 정확하게 모델링하는 포괄적인 인터럽트 컨트롤러를 포함합니다.
+
+### 기능
+
+| Feature                        | Description                                                      |
+|---------------------------------|------------------------------------------------------------------|
+| Software Interrupt (BRK)        | BRK 명령 실행, B 플래그 설정, IRQ/BRK 벡터 사용                         |
+| Maskable Interrupt (IRQ)        | 레벨 트리거, I 플래그(인터럽트 비활성화) 존중                               |
+| Non-Maskable Interrupt (NMI)    | 엣지 트리거(하강 엣지), 항상 실행, NMI 벡터 사용                           |
+| Edge Detection                  | NMI는 1→0 전환(하강 엣지)에서만 트리거                                    |
+| Interrupt Priority              | NMI가 더 높은 우선순위, IRQ 시퀀스를 가로챌 수 있음                         |
+| Interrupt History               | 디버깅을 위해 마지막 32개 인터럽트 기록                                    |
+| Statistics Tracking             | 프로파일링을 위한 총 IRQ, NMI, BRK 수 카운트                              |
+| Hardware-Accurate Timing        | 실제 6502 하드웨어를 모델링하는 7사이클 인터럽트 시퀀스                       |
+
+### 인터럽트
+
+| Type | Trigger | Maskable | Vector | B Flag |
+|------|---------|----------|--------|--------|
+| `BRK` | Software | No | `$FFFE` | Set (1) |
+| `IRQ` | Level | Yes (`I` flag) | `$FFFE` | Clear (0) |
+| `NMI` | Edge (falling) | No | `$FFFA` | Clear (0) |
+
+### 사용 예시
+
+```c
+#include "interrupt.h"
+
+// Initialize interrupt controller
+cpu_init();  // Automatically initializes interrupts
+
+// Trigger IRQ (level-triggered)
+interrupt_set_irq(1);  // Assert IRQ line
+// CPU will service IRQ if I flag is clear
+
+// Trigger NMI (edge-triggered)
+interrupt_set_nmi(1);  // Set NMI line high
+interrupt_set_nmi(0);  // Create falling edge → triggers NMI
+
+// Check for pending interrupts
+INTERRUPT_TYPE type = interrupt_poll();
+if (type == INT_NMI) {
+    // NMI is pending
+}
+
+// View interrupt history
+interrupt_dump_history();
+interrupt_dump_stats();
+```
+
+### Running the Interrupt Test
+
+```bash
+make interrupt-test
+./bin/interrupt_test
+```
+
+인터럽트 테스트는 BRK, IRQ, NMI, 엣지 감지, 우선순위 처리 및 히스토리 추적을 시연합니다.
+
 ## 지원 명령
 
 모든 공식 6502 명령이 구현되었습니다. NMOS 모드로 실행하는 경우, 실제 NMOS 시스템에서 사용된 비공식 명령을 지원하며, 대표적인 예시는 다음과 같습니다:`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`. 다만 일부 불안정한 비공식 명령 (`$9B`, `$9C`, `$9E`, `$9F`)은 실 하드웨어의 예측 불가능한 작동으로 인하여 제외되었습니다.
 
-65C02 모드에서는 모든 표준 WDC 65C02 명령과 완전한 Rockwell/WDC 비트 조작 확장 명령을 지원합니다:
+65C02 모드에서는 모든 표준 WDC 65C02 명령과 *완전한 Rockwell/WDC 비트 조작 확장 명령*을 지원합니다:
 
-- **표준 65C02**: `BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (4x Addressing modes), `TRB`, `TSB`, `WAI`, `STP`
-- **Rockwell/WDC 비트 연산**: `RMB0-7`, `SMB0-7`, `BBR0-7`, `BBS0-7` (총 32개 명령)
+`BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (4 addressing modes), `TRB`, `TSB`, `WAI`, `STP`, *`RMB0-7`, `SMB0-7`, `BBR0-7`, `BBS0-7` (총 32개 명령)*
 
 *첨언: 65C02 모드에서, 대부분의 비공식 명령들은 NOP으로 치환되었습니다. 현재 구현상 해당 경우 두 모드 모두에서 NOP로 간주되는데, 65C02 관점에서 기능상 옳으나 몇 가지의 NMOS 6502에서만 동작하는 비공식 명령이 작동하지 않을 가능성이 있습니다.*
+
+## 디버깅 및 프로파일링 도구
+
+에뮬레이터는 프로그램 실행을 분석하고, 버그를 찾고, 코드를 최적화하는 데 도움이 되는 포괄적인 디버깅 및 프로파일링 시스템을 포함합니다. 디버깅 기능은 `debugging.h` 라이브러리를 통해 제공됩니다. 주요 기능은 다음과 같습니다:
+
+### Features Overview
+
+| Feature              | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| Breakpoints          | 특정 주소에서 실행, 메모리 읽기, 쓰기 또는 접근에 대한 중단점 설정                          |
+| Watchpoints          | 특정 메모리 위치의 변경 사항을 추적하고 알림 수신                                        |
+| Cycle Profiling      | 총 사이클 수를 측정하고 명령별 실행 빈도 분석                                           |
+| Hotspot Analysis     | 가장 자주 실행되는 코드 영역 감지                                                    |
+| Memory Inspection    | hex dump, ASCII 표현 및 역어셈블리로 메모리 내용 보기                                  |
+| Register Inspection  | 플래그 정보를 포함한 전체 CPU 상태 검사                                               |
+| Stack Inspection     | 스택의 현재 상태 및 내용 분석                                                        |
+| Memory Search        | 전체 메모리 공간에서 특정 바이트 패턴 검색                                              |
+
+### Example Usage
+
+```c
+#include "debugging.h"
+
+// Initialize debugger
+debugger_init();
+
+// Set breakpoints
+debugger_add_breakpoint(BP_TYPE_EXEC, 0x8000, "main_loop");
+debugger_add_breakpoint(BP_TYPE_WRITE, 0x0200, "output_port");
+
+// Add watchpoints
+debugger_add_watchpoint(0x0200, "counter_variable");
+
+// Check breakpoints during execution
+if (debugger_check_breakpoint(BP_TYPE_EXEC, REG.PC)) {
+    debugger_dump_registers(); // Dump CPU state
+}
+
+// Perform profiling
+profiler_record_instruction(pc, opcode, cycles);
+profiler_dump_stats();           // Show instruction frequency
+profiler_dump_hotspots(10);      // Show top 10 hotspots
+
+// Memory inspection
+debugger_hexdump(0x8000, 256);        // Hex dump with ASCII
+debugger_disassemble(0x8000, 20);     // Disassemble instructions
+debugger_dump_stack();                // Dump stack contents
+debugger_dump_registers();            // Show registers and flags
+
+// Memory search
+MEM_WORD pattern[] = { 0xA9, 0x42 };  // LDA #$42
+debugger_search_memory(0x8000, 0xFFFF, pattern, 2);
+
+debugger_cleanup(); // Cleanup
+```
+
+### Testing the Debugger
+
+```bash
+make debug-test
+./bin/debug_test
+```
+
+디버그 테스트는 루프, 메모리 수정 및 산술 연산을 수행하는 샘플 프로그램과 함께 모든 디버깅 기능을 시연합니다.
 
 ## 테스팅
 
@@ -233,29 +357,45 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 본 코드베이스는 다음과 같은 네이밍 컨벤션을 따릅니다: 전역에서 접근 가능한 경우에는 ALL_CAPS의 형식으로 명명되었으며(예: `REG`, `BUS`, `EA`), typedef의 경우 `T_` 접두사를 가지고(예: `T_REGISTER`), 상수 또는 매크로의 경우 ALL_CAPS의 형식으로 명명됩니다(예: `FLAG_C`). 코드는 반각 공백 문자 4개로 들여쓰여지며, `.h` 파일에서 선언이, `.c` 파일에서 구현이 이루어지는 표준 관행 또한 프로젝트 전체에서 준수됩니다.
 
 ## 프로젝트 레이아웃
-
 ```
 .
-├── src/                  # Core sources
+├── src/                      # Core sources
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── instruments_handlers.c          # opcode dispatch
-│   ├── instruments_implementation.c    # opcode handlers
-│   ├── instruments_table.c             # metadata
+│   ├── debugging.c           # Debugging and profiling
+│   ├── instruments_handlers.c        # opcode dispatch
+│   ├── instruments_implementation.c  # opcode handlers
+│   ├── instruments_table.c           # opcode metadata
+│   ├── interrupt.c           # Interrupt controller
 │   ├── loader.c
 │   ├── memory.c
 │   ├── stack.c
 │   └── trace.c
-├── tests/                # Test
-│   ├── 6502_functional_test/   # Klaus Dormann functional test
-│   └── minimal/          # Minimal test suite
-├── include/              # Headers
-├── bin/                  # Build outputs
+├── tests/                    # Test suites
+│   ├── 6502_functional_test/ # Klaus Dormann functional test
+│   ├── minimal/              # Minimal and 65C02 test suite
+│   ├── verify_test.c         # Basic verification
+│   ├── debug_test.c          # Debugger test
+│   └── interrupt_test.c      # Interrupt test
+├── include/                  # Header files
+│   ├── addressing.h
+│   ├── bus.h
+│   ├── cpu.h
+│   ├── debugging.h
+│   ├── instruments_handlers.h
+│   ├── instruments_implementation.h
+│   ├── instruments_table.h
+│   ├── interrupt.h
+│   ├── loader.h
+│   ├── memory.h
+│   ├── stack.h
+│   └── trace.h
+├── bin/                      # Build outputs
 ├── main.c
 ├── Makefile
 ├── README.md
-├── README.md              # Korean version of README
+├── README_KO.md              # Korean version of README
 └── .gitignore
 ```
 

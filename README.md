@@ -190,16 +190,18 @@ The emulator includes a comprehensive interrupt controller that accurately model
 
 ### Features
 
-- **`BRK` Instruction**: Software interrupt with `B` flag set
-- **`IRQ` (Maskable)**: Level-triggered, respects `I` flag
-- **`NMI` (Non-Maskable)**: Edge-triggered (falling edge), always executes
-- **Edge Detection**: `NMI` triggers on 1→0 transition
-- **Interrupt Priority**: `NMI` can hijack `IRQ` sequence
-- **Interrupt History**: Records last 32 interrupts for debugging
-- **Statistics Tracking**: Counts total `IRQ`s, `NMI`s, and `BRK`s
-- **7-Cycle Sequence**: Models hardware-accurate interrupt timing
+| Feature                        | Description                                                      |
+|---------------------------------|------------------------------------------------------------------|
+| Software Interrupt (`BRK`)        | Executes `BRK` instruction, sets `B` flag, uses `IRQ`/`BRK` vector       |
+| Maskable Interrupt (`IRQ`)        | Level-triggered, respects `I` flag (interrupt disable)             |
+| Non-Maskable Interrupt (`NMI`)    | Edge-triggered (falling edge), always executes, uses `NMI` vector  |
+| Edge Detection                  | `NMI` triggers only on 1→0 transition (falling edge)               |
+| Interrupt Priority              | `NMI` has higher priority, can hijack `IRQ` sequence                 |
+| Interrupt History               | Records last 32 interrupts for debugging                         |
+| Statistics Tracking             | Counts total `IRQ`s, `NMI`s, `BRK`s for profiling                      |
+| Hardware-Accurate Timing        | 7-cycle interrupt sequence models real 6502 hardware             |
 
-### Interrupt Types
+### Interrupts
 
 | Type | Trigger | Maskable | Vector | B Flag |
 |------|---------|----------|--------|--------|
@@ -247,31 +249,33 @@ The interrupt test demonstrates BRK, IRQ, NMI, edge detection, priority handling
 
 All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: `LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
 
-In 65C02 mode, all standard WDC 65C02 instructions are supported, plus the complete set of Rockwell/WDC bit manipulation extensions:
+In 65C02 mode, all standard WDC 65C02 instructions are supported, including the *complete set of Rockwell/WDC bit manipulation extensions*:
 
-- **Standard 65C02**: `BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (4 addressing modes), `TRB`, `TSB`, `WAI`, `STP`
-- **Rockwell/WDC Bit Operations**: `RMB0-7`, `SMB0-7`, `BBR0-7`, `BBS0-7` (32 instructions total)
+`BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (4 addressing modes), `TRB`, `TSB`, `WAI`, `STP`, *`RMB0-7`, `SMB0-7`, `BBR0-7`, `BBS0-7` (32 instructions total)*
 
 *Note: In 65C02 mode, most undocumented opcodes were officially changed to NOPs. The current implementation treats them as NOPs in both modes, which is functionally correct for 65C02 but means some NMOS-specific undocumented opcodes won't work in NMOS mode if they're unimplemented.*
 
 ## Debugging and Profiling Tools
 
-The emulator includes a comprehensive debugging and profiling system to help analyze program execution, find bugs, and optimize code.
+The emulator includes a comprehensive debugging and profiling system to help analyze program execution, find bugs, or optimize code. The debugging features are provided through the `debugging.h` library. Key features include:
 
-### Features
+### Features Overview
 
-- **Breakpoints**: Set execution, read, write, or access breakpoints at specific memory addresses
-- **Watchpoints**: Monitor memory locations and get notified when values change
-- **Cycle Profiling**: Track total cycle counts and per-instruction execution frequency
-- **Hotspot Analysis**: Identify the most frequently executed code addresses
-- **Memory Inspection**: Hex dumps with ASCII representation and disassembly views
-- **Register & Stack Inspection**: View complete CPU state including flag breakdown
-- **Memory Search**: Find byte patterns anywhere in memory
+| Feature              | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| Breakpoints          | Set breakpoints for execution, memory reads, writes, or access at specific addresses. |
+| Watchpoints          | Track changes to specific memory locations and receive notifications.        |
+| Cycle Profiling      | Measure total cycle counts and analyze per-instruction execution frequency.  |
+| Hotspot Analysis     | Detect the most frequently executed code regions.                            |
+| Memory Inspection    | View memory contents with hex dumps, ASCII representation, and disassembly.  |
+| Register Inspection  | Examine the full CPU state, including detailed flag information.             |
+| Stack Inspection     | Analyze the stack's current state and contents.                              |
+| Memory Search        | Search for specific byte patterns across the entire memory space.            |
 
 ### Example Usage
 
 ```c
-#include "debugger.h"
+#include "debugging.h"
 
 // Initialize debugger
 debugger_init();
@@ -279,47 +283,36 @@ debugger_init();
 // Set breakpoints
 debugger_add_breakpoint(BP_TYPE_EXEC, 0x8000, "main_loop");
 debugger_add_breakpoint(BP_TYPE_WRITE, 0x0200, "output_port");
-debugger_list_breakpoints();
 
 // Add watchpoints
 debugger_add_watchpoint(0x0200, "counter_variable");
 
-// Enable profiling
-profiler_init();
-
-// During execution, check breakpoints
+// Check breakpoints during execution
 if (debugger_check_breakpoint(BP_TYPE_EXEC, REG.PC)) {
-    debugger_dump_registers();
+    debugger_dump_registers(); // Dump CPU state
 }
 
-// Check watchpoints after each step
-debugger_check_watchpoints();
-
-// Record profiling data (normally done automatically)
+// Perform profiling
 profiler_record_instruction(pc, opcode, cycles);
-
-// After execution - view statistics
 profiler_dump_stats();           // Show instruction frequency
-profiler_dump_hotspots(10);      // Show top 10 executed addresses
+profiler_dump_hotspots(10);      // Show top 10 hotspots
 
 // Memory inspection
 debugger_hexdump(0x8000, 256);        // Hex dump with ASCII
-debugger_disassemble(0x8000, 20);     // Disassemble 20 instructions
-debugger_dump_stack();                 // View stack contents
-debugger_dump_registers();             // Show all registers and flags
+debugger_disassemble(0x8000, 20);     // Disassemble instructions
+debugger_dump_stack();                // Dump stack contents
+debugger_dump_registers();            // Show registers and flags
 
 // Memory search
 MEM_WORD pattern[] = { 0xA9, 0x42 };  // LDA #$42
 debugger_search_memory(0x8000, 0xFFFF, pattern, 2);
 
-// Cleanup
-debugger_cleanup();
+debugger_cleanup(); // Cleanup
 ```
 
-### Running the Debug Test
+### Testing the Debugger
 
 ```bash
-# Build and run the comprehensive debug test
 make debug-test
 ./bin/debug_test
 ```
@@ -374,29 +367,45 @@ This is a CPU-focused emulator without peripheral device implementations (PPU, A
 The codebase follows consistent naming conventions: global identifiers use ALL_CAPS (such as `REG`, `BUS`, `EA`), typedefs are prefixed with `T_` (like `T_REGISTER`), and constants or macros use ALL_CAPS (such as `FLAG_C`). Code is indented with 4 spaces, and the standard practice of placing declarations in `.h` files and definitions in `.c` files is followed throughout.
 
 ## Project Layout
-
 ```
 .
-├── src/                  # Core sources
+├── src/                      # Core sources
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── instruments_handlers.c          # opcode dispatch
-│   ├── instruments_implementation.c    # opcode handlers
-│   ├── instruments_table.c             # metadata
+│   ├── debugging.c           # Debugging and profiling
+│   ├── instruments_handlers.c        # opcode dispatch
+│   ├── instruments_implementation.c  # opcode handlers
+│   ├── instruments_table.c           # opcode metadata
+│   ├── interrupt.c           # Interrupt controller
 │   ├── loader.c
 │   ├── memory.c
 │   ├── stack.c
 │   └── trace.c
-├── tests/                # Test
-│   ├── 6502_functional_test/   # Klaus Dormann functional test
-│   └── minimal/          # Minimal test suite
-├── include/              # Headers
-├── bin/                  # Build outputs
+├── tests/                    # Test suites
+│   ├── 6502_functional_test/ # Klaus Dormann functional test
+│   ├── minimal/              # Minimal and 65C02 test suite
+│   ├── verify_test.c         # Basic verification
+│   ├── debug_test.c          # Debugger test
+│   └── interrupt_test.c      # Interrupt test
+├── include/                  # Header files
+│   ├── addressing.h
+│   ├── bus.h
+│   ├── cpu.h
+│   ├── debugging.h
+│   ├── instruments_handlers.h
+│   ├── instruments_implementation.h
+│   ├── instruments_table.h
+│   ├── interrupt.h
+│   ├── loader.h
+│   ├── memory.h
+│   ├── stack.h
+│   └── trace.h
+├── bin/                      # Build outputs
 ├── main.c
 ├── Makefile
 ├── README.md
-├── README_KO.md           # Korean version of README
+├── README_KO.md              # Korean version of README
 └── .gitignore
 ```
 
