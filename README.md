@@ -22,6 +22,20 @@ The CMOS 65C02 implementation includes all new instructions: `BRA` (Branch Alway
 
 Additionally, all Rockwell/WDC 65C02 bit manipulation instructions are fully implemented: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), and `BBS0-7` (Branch on Bit Set).
 
+## Additional Tools
+
+The project includes an interactive debugger, assembler, and **Disk II emulation** for development workflow.
+
+**Interactive Debugger** (`bin/mos6502-debug`): GDB-like debugger with breakpoints, watchpoints, single-stepping, and memory inspection.
+
+**Assembler** (`bin/mos6502-asm`): Two-pass assembler supporting all 6502/65C02 instructions with label resolution.
+
+**Disk II Emulation**: Full Apple II disk controller with 6-and-2 nibble encoding, supporting ProDOS `.po` disk images!
+
+**System Configs** (`systems/`): Pre-configured memory layouts for Apple II, NES, and C64 with peripheral I/O handlers.
+
+See [NEW_FEATURES.md](NEW_FEATURES.md) and [BOOTING_FROM_DISK.md](BOOTING_FROM_DISK.md) for usage details.
+
 ## Getting Started
 
 ### Requirements
@@ -35,6 +49,12 @@ Python 3 is also required to build the example ROM. *(Optional)*
 ```bash
 # Build emulator
 make
+
+# Build interactive debugger
+make debugger
+
+# Build assembler
+make assembler
 
 # Build example ROM
 make rom

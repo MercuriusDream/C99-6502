@@ -3,11 +3,6 @@
 #include "instruments_implementation.h"
 
 void op_illegal(void) {
-    // Illegal/unimplemented opcode - treated as NOP for stability
-    // In a more complete implementation, this could:
-    // - Log the illegal opcode and PC
-    // - Trigger a trap/exception
-    // - Halt execution in strict mode
 }
 
 const instr_fn INSTR_HANDLERS[256] = {

@@ -8,6 +8,7 @@
 #include "stack.h"
 #include "trace.h"
 #include "interrupt.h"
+#include <stdio.h>
 
 extern const instr_fn INSTR_HANDLERS[256];
 
@@ -98,7 +99,11 @@ void cpu_reset() {
     REG.Y = 0;
     REG.S = CPU_RESET_STACK_POINTER;
     REG.P = CPU_RESET_STATUS;
-    REG.PC = bus_read16(CPU_RESET_VECTOR_ADDRESS);
+    MEM_WORD lo = bus_read(CPU_RESET_VECTOR_ADDRESS);
+    MEM_WORD hi = bus_read(CPU_RESET_VECTOR_ADDRESS + 1);
+    REG.PC = lo | ((MEM_TWO_WORDS)hi << 8);
+    printf("[CPU_RESET] Read reset vector from $%04X: lo=$%02X hi=$%02X -> PC=$%04X\n",
+           CPU_RESET_VECTOR_ADDRESS, lo, hi, REG.PC);
 }
 
 void cpu_step() {

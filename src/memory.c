@@ -1,6 +1,7 @@
 #include "memory.h"
 #include "bus.h"
 #include "types.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -128,6 +129,14 @@ static void region_bus_write(MEM_TWO_WORDS ADDR, MEM_WORD DATA, void* CTX) {
     if (region->TYPE == MEM_REGION_RAM && region->DATA) {
         MEM_TWO_WORDS offset = ADDR - region->START;
         region->DATA[offset] = DATA;
+
+        if (ADDR == 0x26 || ADDR == 0x27) {
+            static int zp_log_count = 0;
+            if (zp_log_count < 64) {
+                printf("[ZP WRITE] PC=$%04X addr=$%04X data=$%02X\n", REG.PC, ADDR, DATA);
+            }
+            zp_log_count++;
+        }
     }
 }
 
