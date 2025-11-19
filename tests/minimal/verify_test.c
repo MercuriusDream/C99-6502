@@ -5,31 +5,27 @@
 #include "memory.h"
 #include "loader.h"
 
-int main() {
-    printf("C99-6502 Verifier Host\n");
+static int passed = 0;
+static int failed = 0;
+
+void test_basic_6502() {
+    printf("=== Basic 6502 Tests ===\n\n");
 
     // Initialize memory regions
     mem_region_clear();
-    mem_region_add_ram(0x0000, 0x8000);  // 32KB RAM
-    mem_region_add_rom(0x8000, 0x8000);  // 32KB ROM
+    mem_region_add_ram(0x0000, 0x8000);
+    mem_region_add_rom(0x8000, 0x8000);
 
-    // Load ROM and setup
     load_bin_region("tests/minimal/test.bin", 0x8000);
     mem_region_set_vector(CPU_RESET_VECTOR_ADDRESS, 0x8000);
     mem_region_init();
     cpu_reset();
 
-    // Running the test ROM
     cpu_run(1000);
 
-    // Verify results
-    int passed = 0;
-    int failed = 0;
+    MEM_WORD val;
 
-    printf("Test Results:\n\n");
-
-    // Load and Store
-    MEM_WORD val = bus_read(0x0200);
+    val = bus_read(0x0200);
     printf("Test 1 - LDA/STA: $0200 = $%02X (expected $42) ... %s\n",
            val, (val == 0x42) ? "PASS" : "FAIL");
     (val == 0x42) ? passed++ : failed++;
@@ -111,8 +107,75 @@ int main() {
     printf("Test 15 - ZP,X:   $020E = $%02X (expected $99) ... %s\n",
            val, (val == 0x99) ? "PASS" : "FAIL");
     (val == 0x99) ? passed++ : failed++;
+}
 
-    printf("Total: %d passed, %d failed\n", passed, failed);
+void test_65c02_fixes() {
+    printf("\n=== 65C02 Fix Tests ===\n\n");
+
+    mem_region_clear();
+    mem_region_add_ram(0x0000, 0xFFFF);
+    mem_region_init();
+    cpu_set_variant(CPU_VARIANT_CMOS_65C02);
+    cpu_reset();
+
+    MEM_WORD val;
+
+    // Test BRA (unconditional branch)
+    REG.PC = 0x1000;
+    bus_write(0x1000, 0x80);
+    bus_write(0x1001, 0x02);
+    cpu_step();
+    printf("Test 16 - BRA:    PC = $%04X (expected $1004) ... %s\n",
+           REG.PC, (REG.PC == 0x1004) ? "PASS" : "FAIL");
+    (REG.PC == 0x1004) ? passed++ : failed++;
+
+    // Test BIT #imm (should not affect N/V flags)
+    REG.PC = 0x2000;
+    REG.A = 0x00;
+    REG.P = 0;
+    bus_write(0x2000, 0x89);
+    bus_write(0x2001, 0x80);
+    cpu_step();
+    val = GET_FLAG(FLAG_Z) && !GET_FLAG(FLAG_N) && !GET_FLAG(FLAG_V);
+    printf("Test 17 - BIT #:  Z=%d N=%d V=%d (expected Z=1 N=0 V=0) ... %s\n",
+           GET_FLAG(FLAG_Z), GET_FLAG(FLAG_N), GET_FLAG(FLAG_V),
+           val ? "PASS" : "FAIL");
+    val ? passed++ : failed++;
+
+    // Test JMP (abs,x)
+    REG.PC = 0x3000;
+    REG.X = 0x04;
+    bus_write(0x3000, 0x7C);
+    bus_write(0x3001, 0x00);
+    bus_write(0x3002, 0x40);
+    bus_write(0x4004, 0x00);
+    bus_write(0x4005, 0x50);
+    cpu_step();
+    printf("Test 18 - JMP(A,X): PC = $%04X (expected $5000) ... %s\n",
+           REG.PC, (REG.PC == 0x5000) ? "PASS" : "FAIL");
+    (REG.PC == 0x5000) ? passed++ : failed++;
+
+    // Test ORA (zp)
+    REG.PC = 0x6000;
+    REG.A = 0x55;
+    bus_write(0x6000, 0x12);
+    bus_write(0x6001, 0x10);
+    bus_write(0x0010, 0x00);
+    bus_write(0x0011, 0x70);
+    bus_write(0x7000, 0xAA);
+    cpu_step();
+    printf("Test 19 - ORA(ZP): A = $%02X (expected $FF) ... %s\n",
+           REG.A, (REG.A == 0xFF) ? "PASS" : "FAIL");
+    (REG.A == 0xFF) ? passed++ : failed++;
+}
+
+int main() {
+    printf("C99-6502 Verifier Host\n\n");
+
+    test_basic_6502();
+    test_65c02_fixes();
+
+    printf("\n=== Total: %d passed, %d failed ===\n", passed, failed);
 
     return (failed == 0) ? 0 : 1;
 }

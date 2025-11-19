@@ -26,7 +26,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BPL",ADDR_REL,REG_NONE,REG_NONE},
         {"ORA",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ORA",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"TRB",ADDR_ZP,REG_NONE,REG_NONE},
         {"ORA",ADDR_ZPX,REG_A,REG_NONE},
@@ -66,7 +66,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BMI",ADDR_REL,REG_NONE,REG_NONE},
         {"AND",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"AND",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"AND",ADDR_ZPX,REG_A,REG_NONE},
@@ -106,7 +106,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BVC",ADDR_REL,REG_NONE,REG_NONE},
         {"EOR",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"EOR",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"EOR",ADDR_ZPX,REG_A,REG_NONE},
@@ -146,7 +146,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BVS",ADDR_REL,REG_NONE,REG_NONE},
         {"ADC",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"ADC",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"STZ",ADDR_ZPX,REG_NONE,REG_NONE},
         {"ADC",ADDR_ZPX,REG_A,REG_NONE},
@@ -156,7 +156,7 @@ const INST INST_TABLE[0x10][0x10] = {
         {"ADC",ADDR_ABSY,REG_A,REG_NONE},
         {"PLY",ADDR_NONE,REG_NONE,REG_Y},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"JMP",ADDR_ABS_IND_X,REG_NONE,REG_NONE},
         {"ADC",ADDR_ABSX,REG_A,REG_NONE},
         {"ROR",ADDR_ABSX,REG_A,REG_A},
         {"BBR7",ADDR_ZPREL,REG_NONE,REG_NONE}
@@ -173,7 +173,7 @@ const INST INST_TABLE[0x10][0x10] = {
         {"STX",ADDR_ZP,REG_X,REG_NONE},
         {"SMB0",ADDR_ZP,REG_NONE,REG_NONE},
         {"DEY",ADDR_NONE,REG_Y,REG_NONE},
-        {"STA",ADDR_ABSY,REG_A,REG_NONE},
+        {"BIT",ADDR_IMM,REG_NONE,REG_NONE},
         {"TXS",ADDR_NONE,REG_X,REG_SP},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"STY",ADDR_ABS,REG_Y,REG_NONE},
@@ -186,7 +186,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BCC",ADDR_REL,REG_NONE,REG_NONE},
         {"STA",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"STA",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"STY",ADDR_ZPX,REG_Y,REG_NONE},
         {"STA",ADDR_ZPX,REG_A,REG_NONE},
@@ -226,7 +226,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BCS",ADDR_REL,REG_NONE,REG_NONE},
         {"LDA",ADDR_INDY,REG_NONE,REG_A},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"LDA",ADDR_ZP_IND,REG_NONE,REG_A},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"LDY",ADDR_ZPX,REG_NONE,REG_Y},
         {"LDA",ADDR_ZPX,REG_NONE,REG_A},
@@ -266,7 +266,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BNE",ADDR_REL,REG_NONE,REG_NONE},
         {"CMP",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"CMP",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"CMP",ADDR_ZPX,REG_A,REG_NONE},
@@ -306,7 +306,7 @@ const INST INST_TABLE[0x10][0x10] = {
     {
         {"BEQ",ADDR_REL,REG_NONE,REG_NONE},
         {"SBC",ADDR_INDY,REG_A,REG_NONE},
-        {"???",ADDR_NONE,REG_NONE,REG_NONE},
+        {"SBC",ADDR_ZP_IND,REG_A,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"???",ADDR_NONE,REG_NONE,REG_NONE},
         {"SBC",ADDR_ZPX,REG_A,REG_NONE},

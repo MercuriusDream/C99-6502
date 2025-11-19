@@ -5,6 +5,7 @@
 
 extern MEM_WORD OPCODE;
 extern SIGNED_MEM_WORD REL_OFFSET;
+extern MEM_TWO_WORDS CYCLES;
 
 // CPU variant configuration
 void cpu_set_variant(CPU_VARIANT variant);

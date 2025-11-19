@@ -185,7 +185,12 @@ void BRK(void) {
     interrupt_step_cycle();  // Execute interrupt sequence
 }
 
-void JMP(void) { REG.PC = EA; }
+void JMP(void) {
+    REG.PC = EA;
+    if (cpu_get_variant() == CPU_VARIANT_CMOS_65C02 && OPCODE == 0x6C) {
+        CYCLES += 1;
+    }
+}
 void JSR(void) { push16(REG.PC - 1); REG.PC = EA; }
 void RTS(void) { REG.PC = pop16() + 1; }
 void RTI(void) { REG.P = pop8() & ~(FLAG_B | FLAG_U); REG.PC = pop16(); }
@@ -275,11 +280,13 @@ void CPY(void) {
 }
 
 void BIT(void) {
-    MEM_WORD data = bus_read(EA);
+    MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA;
     MEM_WORD result = REG.A & data;
     if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z);
-    if (data & 0x80) SET_FLAG(FLAG_N); else CLR_FLAG(FLAG_N);
-    if (data & 0x40) SET_FLAG(FLAG_V); else CLR_FLAG(FLAG_V);
+    if (OPCODE != 0x89) {
+        if (data & 0x80) SET_FLAG(FLAG_N); else CLR_FLAG(FLAG_N);
+        if (data & 0x40) SET_FLAG(FLAG_V); else CLR_FLAG(FLAG_V);
+    }
 }
 
 // Undocumented opcodes
