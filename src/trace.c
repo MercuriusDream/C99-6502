@@ -1,6 +1,6 @@
 #include "trace.h"
 #include "cpu.h"
-#include "instruments_table.h"
+#include "instructions_table.h"
 #include <stdio.h>
 
 static int g_enabled = 0;

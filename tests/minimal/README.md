@@ -29,8 +29,8 @@ This generates `test.bin` which can be loaded into the emulator.
 ### With verification
 ```bash
 clang -std=c99 -O2 verify_test.c cpu.c bus.c memory.c stack.c \
-    addressing.c instruments_implementation.c instruments_handlers.c \
-    instruments_table.c loader.c trace.c -o verify_test
+    addressing.c instructions_implementation.c instructions_handlers.c \
+    instructions_table.c loader.c trace.c -o verify_test
 
 ./verify_test
 ```

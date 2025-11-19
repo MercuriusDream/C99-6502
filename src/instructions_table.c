@@ -1,4 +1,4 @@
-#include "instruments_table.h"
+#include "instructions_table.h"
 #include "types.h"
 
 const INST INST_TABLE[0x10][0x10] = {

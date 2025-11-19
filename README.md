@@ -101,7 +101,7 @@ Running...
 
 The emulator is structured around several core modules. The CPU module (`cpu.c/.h`) implements the fetch/decode/execute loop with cycle accounting and interrupt handling (IRQ/NMI/Reset). Memory access is abstracted through a bus interface (`bus.c/.h`) using read/write function pointers, allowing different devices to be mapped into the address space. The memory module (`memory.c/.h`) implements a region-based system where the address space can be divided into RAM, ROM, and I/O regions. Each region can have different properties: RAM is readable and writable, ROM is read-only (write-protected), and I/O regions can have custom handlers for device emulation.
 
-All 6502 addressing modes are implemented in `addressing.c/.h` with proper page-crossing detection. The instruction system uses a 256-entry dispatch table with metadata (source files use `instruments_*` naming for historical reasons), where individual handlers implement operation semantics and timing. Stack operations (`stack.c/.h`) cover the $0100–$01FF range with both 8-bit and 16-bit push/pop support. Additional utilities handle execution tracing and binary loading.
+All 6502 addressing modes are implemented in `addressing.c/.h` with proper page-crossing detection. The instruction system uses a 256-entry dispatch table with metadata, where individual handlers implement operation semantics and timing. Stack operations (`stack.c/.h`) cover the $0100–$01FF range with both 8-bit and 16-bit push/pop support. Additional utilities handle execution tracing and binary loading.
 
 ## Memory Map
 
@@ -374,9 +374,9 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── bus.c
 │   ├── cpu.c
 │   ├── debugging.c           # Debugging and profiling
-│   ├── instruments_handlers.c        # opcode dispatch
-│   ├── instruments_implementation.c  # opcode handlers
-│   ├── instruments_table.c           # opcode metadata
+│   ├── instructions_handlers.c        # opcode dispatch
+│   ├── instructions_implementation.c  # opcode handlers
+│   ├── instructions_table.c           # opcode metadata
 │   ├── interrupt.c           # Interrupt controller
 │   ├── loader.c
 │   ├── memory.c
@@ -393,9 +393,9 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── bus.h
 │   ├── cpu.h
 │   ├── debugging.h
-│   ├── instruments_handlers.h
-│   ├── instruments_implementation.h
-│   ├── instruments_table.h
+│   ├── instructions_handlers.h
+│   ├── instructions_implementation.h
+│   ├── instructions_table.h
 │   ├── interrupt.h
 │   ├── loader.h
 │   ├── memory.h

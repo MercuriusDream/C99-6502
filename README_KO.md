@@ -1,6 +1,6 @@
 # C99-6502
 
-[English / 영어](/)
+[English / 영어](./README.md)
 
 <img width="3000" height="1000" alt="image" src="https://github.com/user-attachments/assets/93fb6303-551e-42a6-aa75-63211b8c0d91" />
 
@@ -99,7 +99,7 @@ Running...
 
 본 에뮬레이터는 여러 핵심 모듈들을 중심으로 구성되어 있습니다. CPU 모듈(`cpu.c/h`)은 사이클 측정과 인터럽트 핸들링 (`IRQ`/`NMI`/`Reset`)을 포함한 핵심 인출/해석/실행 루프를 구현합니다. 메모리 접근은 버스 인터페이스(`bus.c/h`)를 통해 읽기/쓰기 함수 포인터로 구현되며, 이로 인해 여러 장치가 주소 공간에 매핑될 수 있습니다. 메모리 모듈(`memory.c/h`)은 주소 공간을 RAM, ROM, 그리고 입출력 영역으로 구분하는 지역 기반 시스템을 구현합니다. RAM은 읽기/쓰기가 가능하고, ROM은 읽기 전용이며 (쓰기 보호 처리됨), 입출력 영역은 디바이스 에뮬레이션을 위한 커스텀 읽기/쓰기 핸들러를 지원하는 것과 같이 각각의 영역은 다른 속성을 지닐 수 있습니다.
 
-모든 6502 주소 지정 방식은 정밀한 페이지 크로스 감지를 포함하여 `addressing.c/h`에 구현되어 있습니다. 명령어 시스템은 256개의 엔트리를 가진, 메타데이터가 포함된 디스패처 테이블을 사용하며 (소스 파일의 consistency를 위하여 `instruments_*`와 같이 명명되어 있음), 각각의 핸들러가 명령 세만틱과 타이밍을 구현합니다. 스택 연산(`stack.c/h`)은 $0100–$01FF 범위에서의 stack을 구현하며, 8-bit, 그리고 16-bit push/pop 기능을 지원합니다. 추가 모듈들은 실행 트레이싱과 바이너리의 로딩을 지원합니다.
+모든 6502 주소 지정 방식은 정밀한 페이지 크로스 감지를 포함하여 `addressing.c/h`에 구현되어 있습니다. 명령어 시스템은 256개의 엔트리를 가진, 메타데이터가 포함된 디스패처 테이블을 사용하며, 각각의 핸들러가 명령 세만틱과 타이밍을 구현합니다. 스택 연산(`stack.c/h`)은 $0100–$01FF 범위에서의 stack을 구현하며, 8-bit, 그리고 16-bit push/pop 기능을 지원합니다. 추가 모듈들은 실행 트레이싱과 바이너리의 로딩을 지원합니다.
 
 ## 메모리 맵
 
@@ -364,9 +364,9 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 │   ├── bus.c
 │   ├── cpu.c
 │   ├── debugging.c           # Debugging and profiling
-│   ├── instruments_handlers.c        # opcode dispatch
-│   ├── instruments_implementation.c  # opcode handlers
-│   ├── instruments_table.c           # opcode metadata
+│   ├── instructions_handlers.c        # opcode dispatch
+│   ├── instructions_implementation.c  # opcode handlers
+│   ├── instructions_table.c           # opcode metadata
 │   ├── interrupt.c           # Interrupt controller
 │   ├── loader.c
 │   ├── memory.c
@@ -383,9 +383,9 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 │   ├── bus.h
 │   ├── cpu.h
 │   ├── debugging.h
-│   ├── instruments_handlers.h
-│   ├── instruments_implementation.h
-│   ├── instruments_table.h
+│   ├── instructions_handlers.h
+│   ├── instructions_implementation.h
+│   ├── instructions_table.h
 │   ├── interrupt.h
 │   ├── loader.h
 │   ├── memory.h

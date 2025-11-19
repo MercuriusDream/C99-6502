@@ -1,6 +1,6 @@
 #include "types.h"
-#include "instruments_handlers.h"
-#include "instruments_implementation.h"
+#include "instructions_handlers.h"
+#include "instructions_implementation.h"
 
 void op_illegal(void) {
     // Illegal/unimplemented opcode - treated as NOP for stability

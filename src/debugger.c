@@ -2,7 +2,7 @@
 #include "debugger.h"
 #include "cpu.h"
 #include "bus.h"
-#include "instruments_table.h"
+#include "instructions_table.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

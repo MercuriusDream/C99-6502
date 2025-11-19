@@ -1,5 +1,5 @@
-#ifndef INSTRUMENTS_TABLE
-#define INSTRUMENTS_TABLE
+#ifndef INSTRUCTIONS_TABLE
+#define INSTRUCTIONS_TABLE
 
 #include "types.h"
 
