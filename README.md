@@ -8,6 +8,8 @@ The Systems Software isn't, indeed, that sophomore-friendly. So I decided to bui
 
 ## Introduction
 
+<img width="1031" height="451" alt="image" src="https://github.com/user-attachments/assets/7dde66e5-c826-4ad2-b063-2c73f3932f6c" />
+
 *TL;DR: C99-6502 is a MOS 6502 emulator, written in C99, which supports the emulation of both NMOS and CMOS varients.*
 
 This project is a cycle-accurate MOS 6502 emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
@@ -26,9 +28,10 @@ Additionally, all Rockwell/WDC 65C02 bit manipulation instructions are fully imp
 
 ### Requirements
 
-A C99-compliant compiler (GCC or Clang) and Make are required to build the emulator.
-
-Python 3 is also required to build the example ROM. *(Optional)*
+- A C99-compliant compiler (GCC or Clang)
+- Make build system
+- ncurses library (for TUI monitor support)
+- Python 3 (optional, for building example ROMs)
 
 ### Building the Emulator
 
@@ -64,6 +67,9 @@ bin/mos6502 -f program.bin -a C000 -t
 # Use CMOS 65C02 variant
 bin/mos6502 -f program.bin -a 8000 -c 65c02
 
+# Launch interactive TUI monitor
+bin/mos6502 -f program.bin -a 8000 -m
+
 # Configure custom memory layout (16KB RAM + 16KB ROM)
 bin/mos6502 -r 0x0000 -R 16384 -s 0x4000 -S 16384
 
@@ -79,6 +85,7 @@ bin/mos6502 -f program.bin -a 8000 -t -c 65c02 -r 0x0 -R 32768
 | `-a`, `--address`    | Load address in hex (e.g., `8000`, `C000`)              |
 | `-c`, `--cpu`        | CPU variant: `6502`, `nmos`, `65c02`, `cmos` (default: `nmos`) |
 | `-t`, `--trace`      | Print instruction-by-instruction trace                  |
+| `-m`, `--monitor`    | Launch interactive TUI monitor                          |
 | `-r`, `--ram-start`  | RAM start address in hex (default: `0000`)              |
 | `-R`, `--ram-size`   | RAM size in bytes (default: `32768`)                    |
 | `-s`, `--rom-start`  | ROM start address in hex (default: `8000`)              |
@@ -94,6 +101,46 @@ Running...
 8006  C8  INY   A:42 X:01 Y:00 P:24 SP:FD
 8007  00  BRK   A:42 X:01 Y:01 P:24 SP:FD
 ```
+
+## TUI Monitor
+
+*TL;DR: An interactive text-based monitor for real-time CPU visualization, debugging, and performance analysis.*
+
+The emulator includes an interactive TUI (Text User Interface) monitor for real-time visualization and debugging. Launch it with the `-m` or `--monitor` flag.
+
+### Features
+
+| Feature | Description |
+| ------- | ----------- |
+| Real-time CPU visualization | View registers, flags, and execution state |
+| Live disassembly | See upcoming instructions with color-coded mnemonics |
+| Instruction history | Track recently executed instructions with timestamps |
+| Performance metrics | Monitor CPU speed (MHz), cycle counts, and frame timing statistics |
+| Memory inspection | Hexdump view with ASCII representation |
+| Interactive controls | Step through code, pause/resume execution, reset CPU |
+
+### Controls
+
+| Key | Action |
+| --- | ------ |
+| `S` | Step - Execute one instruction |
+| `C` | Continue - Resume execution |
+| `B` | Break - Pause execution |
+| `R` | Reset - Reset CPU state |
+| `Q` | Quit - Exit monitor |
+
+### Display Panels
+
+The monitor is organized into six main panels:
+
+- **Status**: CPU state (running/stopped), speed, cycle count, uptime, memory configuration
+- **Registers**: PC, SP, A, X, Y, P with flag breakdown (N V - B D I Z C)
+- **Disassembly**: Color-coded instruction view following the program counter
+- **Memory**: Hexdump of memory regions with ASCII representation
+- **Instructions**: Execution history with timestamps and register states
+- **Performance**: Real-time speed metrics (current, average, 1% low, 0.1% low)
+
+The TUI requires a terminal size of at least 80×19 characters and supports dark backgrounds for reduced eye strain.
 
 ## Architecture Overview
 
@@ -352,7 +399,7 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 
 # Build and run 65C02 verification tests
 cd tests/minimal && python3 build_65c02_test.py && cd ../..
-clang -std=c17 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
+clang -std=c99 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
 bin/verify_65c02_test
 ```
 
@@ -374,14 +421,16 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── bus.c
 │   ├── cpu.c
 │   ├── debugging.c           # Debugging and profiling
-│   ├── instructions_handlers.c        # opcode dispatch
-│   ├── instructions_implementation.c  # opcode handlers
-│   ├── instructions_table.c           # opcode metadata
+│   ├── instructions_handlers.c        # Opcode dispatch
+│   ├── instructions_implementation.c  # Opcode handlers
+│   ├── instructions_table.c           # Opcode metadata
 │   ├── interrupt.c           # Interrupt controller
 │   ├── loader.c
+│   ├── logging.c             # Logging system
 │   ├── memory.c
 │   ├── stack.c
-│   └── trace.c
+│   ├── trace.c
+│   └── tui_monitor.c         # TUI monitor implementation
 ├── tests/                    # Test suites
 │   ├── 6502_functional_test/ # Klaus Dormann functional test
 │   ├── minimal/              # Minimal and 65C02 test suite
@@ -398,9 +447,12 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── instructions_table.h
 │   ├── interrupt.h
 │   ├── loader.h
+│   ├── logging.h
 │   ├── memory.h
 │   ├── stack.h
-│   └── trace.h
+│   ├── trace.h
+│   ├── tui_monitor.h         # TUI monitor header
+│   └── types.h
 ├── bin/                      # Build outputs
 ├── main.c
 ├── Makefile

@@ -15,6 +15,7 @@
 #define CPU_RESET_VECTOR_ADDRESS 0xFFFC
 
 #define CPU_TEST_RUN_LIMIT 10000
+#define MAX_LOG_LENGTH 1024
 
 typedef enum
 {
@@ -59,6 +60,13 @@ typedef enum
     MEM_REGION_ROM,
     MEM_REGION_IO
 } MEM_REGION_TYPE;
+
+typedef enum
+{
+    LOG_INFO,
+    LOG_WARN,
+    LOG_ERROR
+} LOGGING_TYPES;
 
 typedef struct
 {

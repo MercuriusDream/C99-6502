@@ -8,6 +8,8 @@
 
 ## 소개
 
+<img width="1031" height="451" alt="image" src="https://github.com/user-attachments/assets/7dde66e5-c826-4ad2-b063-2c73f3932f6c" />
+
 *TL;DR: C99-6502는 MOS 6502의 NMOS 6502와 CMOS 65C02 변형의 에뮬레이션을 모두 지원하는 C99로 작성된 에뮬레이터입니다.*
 
 이 프로젝트는 사이클 정밀도를 보장하는 MOS 6502 마이크로프로세서와 그 변형을 에뮬레이팅하는, C99로 작성된 에뮬레이터로, 설계 문서에 포함된 작동 특성과 타이밍 관련 요점을 포함한 원 NMOS 6502 프로세서의 모든 작동을 섬세하게 모방하는 것이 특징입니다.
@@ -24,9 +26,10 @@ CMOS 65C02의 경우, `BRA`, (무조건 분기), `PHX`/`PHY` (X/Y 레지스터 �
 
 ### 요구 사항
 
-GCC 또는 Clang과 같은 C99 표준을 따르는 컴파일러와, Make가 에뮬레이터 빌드에 요구됩니다.
-
-예시 ROM을 빌드하는 경우, Python 3 또한 요구됩니다. *(선택 사항)*
+- GCC 또는 Clang과 같은 C99 표준을 따르는 컴파일러
+- Make 빌드 시스템
+- ncurses 라이브러리 (TUI 모니터 지원용)
+- Python 3 (선택 사항, 예시 ROM 빌드용)
 
 ### 에뮬레이터 빌드
 
@@ -62,6 +65,9 @@ bin/mos6502 -f program.bin -a C000 -t
 # CMOS 65C02
 bin/mos6502 -f program.bin -a 8000 -c 65c02
 
+# 대화형 TUI 모니터 실행
+bin/mos6502 -f program.bin -a 8000 -m
+
 # 커스텀 메모리 레이아웃 구성 (16KB RAM + 16KB ROM)
 bin/mos6502 -r 0x0000 -R 16384 -s 0x4000 -S 16384
 
@@ -77,6 +83,7 @@ bin/mos6502 -f program.bin -a 8000 -t -c 65c02 -r 0x0 -R 32768
 | `-a`, `--address`    | 16진수로서 로드할 주소 (예: `8000`, `C000`)                 |
 | `-c`, `--cpu`        | CPU 변형: `6502`, `nmos`, `65c02`, `cmos` (기본: `nmos`)  |
 | `-t`, `--trace`      | 각 명령줄에 대한 트레이스의 실행                              |
+| `-m`, `--monitor`    | 대화형 TUI 모니터 실행                                      |
 | `-r`, `--ram-start`  | 16진수로서 RAM 시작 주소 (기본: `0000`)                     |
 | `-R`, `--ram-size`   | RAM 크기 (바이트 단위) (기본: `32768`)                      |
 | `-s`, `--rom-start`  | 16진수로서 ROM 시작 주소 (기본: `8000`)                     |
@@ -92,6 +99,46 @@ Running...
 8006  C8  INY   A:42 X:01 Y:00 P:24 SP:FD
 8007  00  BRK   A:42 X:01 Y:01 P:24 SP:FD
 ```
+
+## TUI 모니터
+
+*TL;DR: 실시간 CPU 시각화, 디버깅 및 성능 분석을 위한 대화형 텍스트 기반 모니터입니다.*
+
+에뮬레이터는 실시간 시각화 및 디버깅을 위한 대화형 TUI (텍스트 사용자 인터페이스) 모니터를 포함합니다. `-m` 또는 `--monitor` 플래그로 실행하십시오.
+
+### 기능
+
+| 기능 | 설명 |
+| --- | --- |
+| 실시간 CPU 시각화 | 레지스터, 플래그 및 실행 상태 확인 |
+| 라이브 역어셈블리 | 색상으로 구분된 니모닉으로 다음 명령어 확인 |
+| 명령어 히스토리 | 타임스탬프와 함께 최근 실행된 명령어 추적 |
+| 성능 메트릭 | CPU 속도(MHz), 사이클 수 및 프레임 타이밍 통계 모니터링 |
+| 메모리 검사 | ASCII 표현과 함께 Hexdump 뷰 |
+| 대화형 컨트롤 | 코드 단계별 실행, 실행 일시 중지/재개, CPU 리셋 |
+
+### 컨트롤
+
+| 키 | 동작 |
+| -- | ---- |
+| `S` | Step - 한 명령어 실행 |
+| `C` | Continue - 실행 재개 |
+| `B` | Break - 실행 일시 중지 |
+| `R` | Reset - CPU 상태 리셋 |
+| `Q` | Quit - 모니터 종료 |
+
+### 디스플레이 패널
+
+모니터는 6개의 주요 패널로 구성됩니다:
+
+- **Status**: CPU 상태 (실행 중/정지), 속도, 사이클 수, 가동 시간, 메모리 구성
+- **Registers**: PC, SP, A, X, Y, P 및 플래그 분석 (N V - B D I Z C)
+- **Disassembly**: 프로그램 카운터를 따라가는 색상 코드 명령어 뷰
+- **Memory**: ASCII 표현과 함께 메모리 영역의 Hexdump
+- **Instructions**: 타임스탬프 및 레지스터 상태와 함께 실행 히스토리
+- **Performance**: 실시간 속도 메트릭 (현재, 평균, 1% low, 0.1% low)
+
+TUI는 최소 80×19 문자의 터미널 크기가 필요하며 눈의 피로 감소를 위해 어두운 배경을 지원합니다.
 
 ## 설계 오버뷰
 
@@ -363,21 +410,23 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── debugging.c           # Debugging and profiling
-│   ├── instructions_handlers.c        # opcode dispatch
-│   ├── instructions_implementation.c  # opcode handlers
-│   ├── instructions_table.c           # opcode metadata
-│   ├── interrupt.c           # Interrupt controller
+│   ├── debugging.c           # 디버깅 및 프로파일링
+│   ├── instructions_handlers.c        # Opcode 디스패치
+│   ├── instructions_implementation.c  # Opcode 핸들러
+│   ├── instructions_table.c           # Opcode 메타데이터
+│   ├── interrupt.c           # 인터럽트 컨트롤러
 │   ├── loader.c
+│   ├── logging.c             # 로깅 시스템
 │   ├── memory.c
 │   ├── stack.c
-│   └── trace.c
+│   ├── trace.c
+│   └── tui_monitor.c         # TUI 모니터 구현
 ├── tests/                    # Test suites
-│   ├── 6502_functional_test/ # Klaus Dormann functional test
-│   ├── minimal/              # Minimal and 65C02 test suite
-│   ├── verify_test.c         # Basic verification
-│   ├── debug_test.c          # Debugger test
-│   └── interrupt_test.c      # Interrupt test
+│   ├── 6502_functional_test/ # Klaus Dormann 기능 테스트
+│   ├── minimal/              # 최소 및 65C02 테스트 스위트
+│   ├── verify_test.c         # 기본 검증
+│   ├── debug_test.c          # 디버거 테스트
+│   └── interrupt_test.c      # 인터럽트 테스트
 ├── include/                  # Header files
 │   ├── addressing.h
 │   ├── bus.h
@@ -388,14 +437,17 @@ bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 │   ├── instructions_table.h
 │   ├── interrupt.h
 │   ├── loader.h
+│   ├── logging.h
 │   ├── memory.h
 │   ├── stack.h
-│   └── trace.h
+│   ├── trace.h
+│   ├── tui_monitor.h         # TUI 모니터 헤더
+│   └── types.h
 ├── bin/                      # Build outputs
 ├── main.c
 ├── Makefile
 ├── README.md
-├── README_KO.md              # Korean version of README
+├── README_KO.md              # 한국어 버전 README
 └── .gitignore
 ```
 

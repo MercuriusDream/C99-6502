@@ -1,17 +1,19 @@
 CC=clang
-CFLAGS=-std=c17 -O2 -Wall -Iinclude
+CFLAGS=-std=c99 -O2 -Wall -Iinclude
 SRC_DIR=src
 INCLUDE_DIR=include
 BIN_DIR=bin
 TEST_DIR=tests
+TOOLS_DIR=tools
 
-# Source files
-SOURCES=$(wildcard $(SRC_DIR)/*.c)
+# Source files (exclude tui_monitor.c from library sources)
+SOURCES=$(filter-out $(SRC_DIR)/tui_monitor.c, $(wildcard $(SRC_DIR)/*.c))
 MAIN_SRC=main.c
 TEST_SRC=$(TEST_DIR)/minimal/verify_test.c
 FUNCTIONAL_TEST_SRC=$(TEST_DIR)/6502_functional_test/run_functional_test.c
 DEBUG_TEST_SRC=$(TEST_DIR)/debug_test.c
 INTERRUPT_TEST_SRC=$(TEST_DIR)/interrupt_test.c
+MONITOR_SRC=$(TOOLS_DIR)/monitor.c
 
 # Output binaries
 TARGET=$(BIN_DIR)/mos6502
@@ -21,13 +23,14 @@ DEBUG_TEST_TARGET=$(BIN_DIR)/debug_test
 INTERRUPT_TEST_TARGET=$(BIN_DIR)/interrupt_test
 TEST_65C02_TARGET=$(BIN_DIR)/test_65c02
 VERIFY_65C02_TARGET=$(BIN_DIR)/verify_65c02_test
+MONITOR_TARGET=$(BIN_DIR)/monitor
 
 # Default target
 all: $(TARGET)
 
-# Build main emulator
-$(TARGET): $(SOURCES) $(MAIN_SRC) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $(SOURCES) $(MAIN_SRC) -o $(TARGET)
+# Build main emulator (with TUI monitor support)
+$(TARGET): $(SOURCES) $(SRC_DIR)/tui_monitor.c $(MAIN_SRC) | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SOURCES) $(SRC_DIR)/tui_monitor.c $(MAIN_SRC) -lncurses -o $(TARGET)
 	@echo "Built $(TARGET)"
 
 # Build test program
@@ -89,6 +92,10 @@ run: $(TARGET)
 run-trace: $(TARGET)
 	$(TARGET) -f tests/minimal/test.bin -a 8000 -t
 
+# Run with TUI monitor
+monitor: $(TARGET)
+	$(TARGET) -m
+
 # Run verification tests
 verify: $(TEST_TARGET)
 	$(TEST_TARGET)
@@ -137,4 +144,4 @@ reset-test: $(SOURCES) tests/minimal/verify_reset.c | $(BIN_DIR)
 	$(CC) $(CFLAGS) $(SOURCES) tests/minimal/verify_reset.c -o $(BIN_DIR)/verify_reset_test
 	@echo "Built Reset Test"
 
-.PHONY: all test clean run run-trace verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test test-65c02 run-test-65c02 verify-65c02 run-verify-65c02 run-reset-test
+.PHONY: all test clean run run-trace monitor verify rom functional-test run-functional-test download-functional-test debug-test run-debug-test interrupt-test run-interrupt-test test-65c02 run-test-65c02 verify-65c02 run-verify-65c02 run-reset-test
