@@ -590,7 +590,7 @@ void draw_memory_watch(MonitorState* state, int y, int x, int width, int height)
 void draw_instruction_log(MonitorState* state, int y, int x, int width, int height) {
     draw_panel(y, x, height, width, "Instructions");
 
-    mvprintw(y + 1, x + 2, "%-6s %-4s %-3s %s", "Time", "Addr", "Ins", "State");
+    mvprintw(y + 1, x + 2, "%-4s %-3s %s", "Addr", "Ins", "State");
 
     int display_count = (height - 3 < INSTRUCTION_LOG_DISPLAY) ? height - 3 : INSTRUCTION_LOG_DISPLAY;
 
@@ -598,37 +598,10 @@ void draw_instruction_log(MonitorState* state, int y, int x, int width, int heig
         int idx = (state->instruction_log_idx - 1 - i + INSTRUCTION_LOG_SIZE) % INSTRUCTION_LOG_SIZE;
         InstructionLogEntry* entry = &state->instruction_log[idx];
 
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        long ms_ago = (now.tv_sec - entry->timestamp.tv_sec) * 1000 +
-                      (now.tv_nsec - entry->timestamp.tv_nsec) / 1000000;
-
-        // Format time with fixed width (max 6 chars including unit)
-        char time_str[8];
-        if (ms_ago >= 60000) {
-            // 60s+ -> show in minutes: "99.9m"
-            snprintf(time_str, sizeof(time_str), "%.1fm", ms_ago / 60000.0);
-        } else if (ms_ago >= 10000) {
-            // 10s-60s -> show in seconds without decimal: "59s"
-            snprintf(time_str, sizeof(time_str), "%lds", ms_ago / 1000);
-        } else if (ms_ago >= 1000) {
-            // 1s-10s -> show with one decimal: "9.9s"
-            snprintf(time_str, sizeof(time_str), "%.1fs", ms_ago / 1000.0);
-        } else if (ms_ago >= 100) {
-            // 100ms-999ms -> show without decimal: "999ms"
-            snprintf(time_str, sizeof(time_str), "%ldms", ms_ago);
-        } else if (ms_ago >= 10) {
-            // 10ms-99ms -> show: "99ms"
-            snprintf(time_str, sizeof(time_str), "%ldms", ms_ago);
-        } else {
-            // 0-9ms -> show: "9ms"
-            snprintf(time_str, sizeof(time_str), "%ldms", ms_ago);
-        }
-
         // Print with instruction color
         int inst_color = get_instruction_color(entry->mnemonic);
 
-        mvprintw(y + 2 + i, x + 2, "%-6s %04X ", time_str, entry->addr);
+        mvprintw(y + 2 + i, x + 2, "%04X ", entry->addr);
 
         attron(COLOR_PAIR(inst_color));
         printw("%-3s", entry->mnemonic);
