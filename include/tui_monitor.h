@@ -6,7 +6,7 @@
 #include "types.h"
 
 // Panel dimensions and positions
-#define SCREEN_MIN_WIDTH 80
+#define SCREEN_MIN_WIDTH 85
 #define SCREEN_MIN_HEIGHT 19
 
 // Cycle history configuration - larger sample for better percentile calculation

@@ -372,19 +372,74 @@ void NOP_READ(void) {
 }
 
 // CMOS 65C02 Instructions
-void BRA_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_TWO_WORDS old_pc = REG.PC; REG.PC = EA; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); }
-void PHX(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; push8(REG.X); }
-void PHY(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; push8(REG.Y); }
-void PLX(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; REG.X = pop8(); set_zn(REG.X); }
-void PLY(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; REG.Y = pop8(); set_zn(REG.Y); }
-void STZ(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; bus_write(EA, 0x00); }
-void TRB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD data = bus_read(EA); MEM_WORD result = REG.A & data; if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z); bus_write(EA, data & ~REG.A); }
-void TSB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD data = bus_read(EA); MEM_WORD result = REG.A & data; if (result == 0) SET_FLAG(FLAG_Z); else CLR_FLAG(FLAG_Z); bus_write(EA, data | REG.A); }
-void WAI(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; cpu_set_waiting(1); }
-void STP(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; cpu_set_stopped(1); }
+void BRA_(void) {
+    MEM_TWO_WORDS
+    old_pc = REG.PC;
+    REG.PC = EA;
+    BRANCH_TAKEN = 1;
+    BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00));
+}
+
+void PHX(void) { push8(REG.X); }
+void PHY(void) { push8(REG.Y); }
+
+void PLX(void) {
+    REG.X = pop8();
+    set_zn(REG.X);
+}
+void PLY(void) {
+    REG.Y = pop8();
+    set_zn(REG.Y);
+}
+
+void STZ(void) { bus_write(EA, 0x00); }
+
+void TRB(void) {
+    MEM_WORD data = bus_read(EA);
+    MEM_WORD result = REG.A & data;
+    if (!(result)) SET_FLAG(FLAG_Z);
+    else CLR_FLAG(FLAG_Z);
+    bus_write(EA, data & ~REG.A);
+}
+void TSB(void) {
+    MEM_WORD data = bus_read(EA);
+    MEM_WORD result = REG.A & data;
+    if (!(result)) SET_FLAG(FLAG_Z);
+    else CLR_FLAG(FLAG_Z);
+    bus_write(EA, data | REG.A);
+}
+
+void WAI(void) { cpu_set_waiting(1); }
+void STP(void) { cpu_set_stopped(1); }
 
 // Rockwell/WDC 65C02 Bit Manipulation Instructions
-void RMB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); bus_write(EA, data & ~(1 << bit)); }
-void SMB(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); bus_write(EA, data | (1 << bit)); }
-void BBR_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); if ((data & (1 << bit)) == 0) { MEM_TWO_WORDS old_pc = REG.PC; REG.PC = (REG.PC + REL_OFFSET) & 0xFFFF; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); } }
-void BBS_(void) { if (cpu_get_variant() != CPU_VARIANT_CMOS_65C02) return; MEM_WORD bit = (OPCODE >> 4) & 0x07; MEM_WORD data = bus_read(EA); if ((data & (1 << bit)) != 0) { MEM_TWO_WORDS old_pc = REG.PC; REG.PC = (REG.PC + REL_OFFSET) & 0xFFFF; BRANCH_TAKEN = 1; BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00)); } }
+void RMB(void) {
+    MEM_WORD bit = (OPCODE >> 4) & 0x07;
+    MEM_WORD data = bus_read(EA);
+    bus_write(EA, data & ~(1 << bit));
+}
+void SMB(void) {
+    MEM_WORD bit = (OPCODE >> 4) & 0x07;
+    MEM_WORD data = bus_read(EA);
+    bus_write(EA, data | (1 << bit));
+}
+void BBR_(void) {
+    MEM_WORD bit = (OPCODE >> 4) & 0x07;
+    MEM_WORD data = bus_read(EA);
+    if (!(data & (1<<bit))) {
+        MEM_TWO_WORDS old_pc = REG.PC;
+        REG.PC = (REG.PC+REL_OFFSET) & 0xFFFF;
+        BRANCH_TAKEN = 1;
+        BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00));
+    }
+}
+void BBS_(void) {
+    MEM_WORD bit = (OPCODE >> 4) & 0x07;
+    MEM_WORD data = bus_read(EA);
+    if ((data & (1<<bit))) {
+        MEM_TWO_WORDS old_pc = REG.PC;
+        REG.PC = (REG.PC + REL_OFFSET) & 0xFFFF;
+        BRANCH_TAKEN = 1;
+        BRANCH_PAGE_CROSS = ((old_pc & 0xFF00) != (REG.PC & 0xFF00));
+    }
+}
