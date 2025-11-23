@@ -1,9 +1,6 @@
 # Project Specific
 bin
 
-# Claude
-CLAUDE.md
-
 # Klaus Dormann functional test binaries (download with make download-functional-test)
 tests/6502_functional_test/*.bin
 tests/6502_functional_test/*.lst
