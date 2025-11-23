@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include "debugger.h"
 #include "cpu.h"
 #include "bus.h"
@@ -6,6 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static inline char* _strdup(const char* dup_src_str) {
+    char* dup_obj_str;
+    if (!(dup_obj_str = malloc(strlen(dup_src_str)+1)) || !strcpy(dup_obj_str, dup_src_str)) return NULL;
+    return dup_obj_str;
+}
 
 // Breakpoint and watchpoint arrays
 static BREAKPOINT breakpoints[MAX_BREAKPOINTS];
@@ -62,7 +67,7 @@ int debugger_add_breakpoint(BP_TYPE type, MEM_TWO_WORDS addr, const char* label)
     bp->type = type;
     bp->addr = addr;
     if (label) {
-        bp->label = strdup(label);
+        bp->label = _strdup(label);
         if (!bp->label) {
             printf("[Debugger] Warning: Failed to allocate memory for breakpoint label\n");
         }
@@ -169,7 +174,7 @@ int debugger_add_watchpoint(MEM_TWO_WORDS addr, const char* label) {
     wp->addr = addr;
     wp->old_value = bus_read(addr);
     if (label) {
-        wp->label = strdup(label);
+        wp->label = _strdup(label);
         if (!wp->label) {
             printf("[Debugger] Warning: Failed to allocate memory for watchpoint label\n");
         }

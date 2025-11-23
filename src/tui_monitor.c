@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include "tui_monitor.h"
 #include "cpu.h"
 #include "bus.h"

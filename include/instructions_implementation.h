@@ -4,6 +4,8 @@
 #include "types.h"
 #include "cpu.h"
 
+// HERE COMES THE MOUNTAIN!
+
 void ADC(void);
 void SBC(void);
 void LDA(void);
@@ -62,7 +64,8 @@ void RTS(void);
 void RTI(void);
 void BIT(void);
 
-// Illegal/Undocumented opcodes (stable on real hardware)
+// Illegal/Undocumented opcodes (stable on real hardware; Therefore implementing)
+
 void LAX(void);
 void SAX(void);
 void DCP(void);

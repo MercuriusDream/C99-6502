@@ -4,48 +4,83 @@
 
 <img width="3000" height="1000" alt="image" src="https://github.com/user-attachments/assets/93fb6303-551e-42a6-aa75-63211b8c0d91" />
 
-The Systems Software isn't, indeed, that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to understand the most of lecture.
+The Systems Software isn't, indeed, that sophomore-friendly. So I decided to build an emulator of a well-known microprocessor, to barely understand the course.
 
 ## Introduction
 
 <img width="1031" height="451" alt="image" src="https://github.com/user-attachments/assets/7dde66e5-c826-4ad2-b063-2c73f3932f6c" />
 
-*TL;DR: C99-6502 is a MOS 6502 emulator, written in C99, which supports the emulation of both NMOS and CMOS varients.*
+*TL;DR: C99-6502 is a MOS 6502 emulator, written in ISO/IEC 9899:1999 compliant C, which supports the emulation of both NMOS and CMOS variants, with some convenient features for POSIX environments.*
 
 This project is a cycle-accurate MOS 6502 emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
 
 The emulator supports the complete instruction set with stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
 
-Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32KiB RAM ($0000-$7FFF) and 32KiB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems (NES, Apple II, Commodore 64) by configuring appropriate memory maps for each platform.
+Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32KiB RAM ($0000-$7FFF) and 32KiB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems *(e.g. NES, Apple II, Commodore 64)* by configuring appropriate memory maps for each platform.
 
 The emulator supports both NMOS 6502 and CMOS 65C02 CPU variants. The variant can be selected via command line option (defaults to NMOS 6502). Key differences between variants include BCD flag behavior, the JMP indirect bug fix in 65C02, and instruction set additions in 65C02.
 
-The CMOS 65C02 implementation includes all new instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), and `STP` (Stop Processor).
+The CMOS 65C02 implementation includes all new instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), and `STP` (Stop Processor), including all the Rockwell/WDC 65C02 bit manipulation instructions: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), and `BBS0-7` (Branch on Bit Set).
 
-Additionally, all Rockwell/WDC 65C02 bit manipulation instructions are fully implemented: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), and `BBS0-7` (Branch on Bit Set).
+Furthermore, although these components are not part of the ISO/IEC 9899:1999 standard, this emulator includes optional nonstandard features for user convenience, such as a Text User Interface (TUI) based CPU visualization monitor, built on the `ncurses` library, available in POSIX-compliant environments, and a Python 3 based system for building complex test ROMs.
 
-## Getting Started
-
-### Requirements
-
-- A C99-compliant compiler (GCC or Clang)
-- Make build system
-- ncurses library (for TUI monitor support)
-- Python 3 (optional, for building example ROMs)
-
-### Building the Emulator
+### Quick Start
 
 ```bash
-# Build emulator
+# Full build (POSIX environment assumed)
 make
 
-# Build example ROM
-make rom
+# ISO/IEC 9899:1999 compliant build
+make main
 
-# Run example
+# Run the minimal example ROM
 make run
 
-# Run with trace
+# Run with trace enabled
+make run-trace
+```
+
+## Requirements
+
+### Mandatory
+
+| Requirement               | Description                                             |
+| ------------------------- | ------------------------------------------------------- |
+| An ISO/IEC 9899:1999 compliant compiler | *Examples include GCC and Clang* |
+
+### Optional
+
+| Requirement               | Description                                             |
+| ------------------------- | ------------------------------------------------------- |
+| make or its equivalent    | Automated build tool                                    |
+| ncurses                   | Framework for TUI monitor                               |
+| POSIX.1-2008 compliant environment | Precise timing than that of a non-POSIX compliant environment via `clock_gettime` |
+| Python 3                  | Build tool for example ROMs                             |
+
+*Note: ncurses is usually included within POSIX compliant environments.*
+
+## Building
+
+```bash
+# Build the entire emulator suite (equal to make posix)
+make
+
+# Build the entire suite with POSIX environment support
+make posix
+
+# Build the C99 standard compliant main emulator
+make main
+
+# Build the TUI monitor
+make monitor
+
+# Build the example ROM
+make rom
+
+# Run the example ROM
+make run
+
+# Run the example ROM with instruction-by-instruction trace
 make run-trace
 
 # Build and run verification tests
@@ -55,71 +90,66 @@ make verify
 make clean
 ```
 
-## Usage
+*Note: GNU make or its equivalent is required to automatically build the emulator.*
+
+## Execute
+
+### Argument Options
+
+| Option               | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| `-f`, `--file`       | Binary file to load                                     |
+| `-a`, `--address`    | Load address in hex (e.g., `8000`, `C000`)              |
+| `-c`, `--cpu`        | CPU variant *(`6502`, `nmos`, `65c02`, `cmos`, defaults to `nmos`)* |
+| `-t`, `--trace`      | Print instruction-by-instruction trace                  |
+| `-m`, `--monitor`    | Launch interactive TUI monitor *(ncurses required)*      |
+| `-r`, `--ram-start`  | RAM start address *(hexadecimal, defaults to `0000`)*           |
+| `-R`, `--ram-size`   | RAM size *(in bytes, defaults to `32768`)*                 |
+| `-s`, `--rom-start`  | ROM start address *(hexadecimal, defaults to `8000`)*           |
+| `-S`, `--rom-size`   | ROM size *(in bytes, defaults to `32768`)*                 |
+
+#### Examples
 
 ```bash
 # Load a binary at address $8000
 bin/mos6502 -f program.bin -a 8000
 
-# Enable execution trace
+# Enable instruction-by-instruction trace
 bin/mos6502 -f program.bin -a C000 -t
 
 # Use CMOS 65C02 variant
 bin/mos6502 -f program.bin -a 8000 -c 65c02
 
-# Launch interactive TUI monitor
+# Launch interactive TUI monitor (requires ncurses)
 bin/mos6502 -f program.bin -a 8000 -m
 
-# Configure custom memory layout (16KB RAM + 16KB ROM)
+# Configure custom memory layout (16KiB RAM + 16KiB ROM)
 bin/mos6502 -r 0x0000 -R 16384 -s 0x4000 -S 16384
 
 # Combine multiple options
 bin/mos6502 -f program.bin -a 8000 -t -c 65c02 -r 0x0 -R 32768
 ```
 
-**Options**
+### TUI Monitor
 
-| Option               | Description                                             |
-| -------------------- | ------------------------------------------------------- |
-| `-f`, `--file`       | Binary file to load                                     |
-| `-a`, `--address`    | Load address in hex (e.g., `8000`, `C000`)              |
-| `-c`, `--cpu`        | CPU variant: `6502`, `nmos`, `65c02`, `cmos` (default: `nmos`) |
-| `-t`, `--trace`      | Print instruction-by-instruction trace                  |
-| `-m`, `--monitor`    | Launch interactive TUI monitor                          |
-| `-r`, `--ram-start`  | RAM start address in hex (default: `0000`)              |
-| `-R`, `--ram-size`   | RAM size in bytes (default: `32768`)                    |
-| `-s`, `--rom-start`  | ROM start address in hex (default: `8000`)              |
-| `-S`, `--rom-size`   | ROM size in bytes (default: `32768`)                    |
-
-**Example (trace excerpt)**
-
-```
-Running...
-8000  A9  LDA   A:00 X:00 Y:00 P:24 SP:FD
-8002  8D  STA   A:42 X:00 Y:00 P:24 SP:FD
-8005  E8  INX   A:42 X:00 Y:00 P:24 SP:FD
-8006  C8  INY   A:42 X:01 Y:00 P:24 SP:FD
-8007  00  BRK   A:42 X:01 Y:01 P:24 SP:FD
-```
-
-## TUI Monitor
-
-*TL;DR: An interactive text-based monitor for real-time CPU visualization, debugging, and performance analysis.*
+*TL;DR: This emulator provides an interactive text-based monitor with variants of features, to support the workloads such as visualization, debugging, or analysis.*
 
 The emulator includes an interactive TUI (Text User Interface) monitor for real-time visualization and debugging. Launch it with the `-m` or `--monitor` flag.
 
-### Features
+*Note: ncurses is required to use the TUI monitor.*
+
+#### Features
 
 | Feature | Description |
-| ------- | ----------- |
-| Real-time CPU visualization | View registers, flags, and execution state |
-| Live disassembly | See upcoming instructions with color-coded mnemonics |
-| Instruction history | Track recently executed instructions with timestamps |
-| Performance metrics | Monitor CPU speed (MHz), cycle counts, and frame timing statistics |
-| Memory inspection | Hexdump view with ASCII representation |
-| Interactive controls | Step through code, pause/resume execution, reset CPU |
+| --- | --- |
+| State monitoring | Registers and flags made visible |
+| Live disassembly | Live viewing of upcoming instructions |
+| Execution history | Recently executed instructions |
+| Performance analysis | Cycle counts and frame timing's analysis |
+| Memory visualization | Hexdump with ASCII representations |
+| Live debugging | Step-by-step debugging including breakpoints, watchpoints, and hardware-based states |
 
-### Controls
+#### Controls
 
 | Key | Action |
 | --- | ------ |
@@ -129,20 +159,24 @@ The emulator includes an interactive TUI (Text User Interface) monitor for real-
 | `R` | Reset - Reset CPU state |
 | `Q` | Quit - Exit monitor |
 
-### Display Panels
+#### Display Panels
 
 The monitor is organized into six main panels:
 
-- **Status**: CPU state (running/stopped), speed, cycle count, uptime, memory configuration
-- **Registers**: PC, SP, A, X, Y, P with flag breakdown (N V - B D I Z C)
-- **Disassembly**: Color-coded instruction view following the program counter
-- **Memory**: Hexdump of memory regions with ASCII representation
-- **Instructions**: Execution history with timestamps and register states
-- **Performance**: Real-time speed metrics (current, average, 1% low, 0.1% low)
+| Panel | Description |
+| --- | --- |
+| Status | CPU state (running/stopped), speed, cycle count, uptime, memory configuration |
+| Registers | `PC`, `SP`, `A`, `X`, `Y`, `P` with flag breakdown (`N` `V` - `B` `D` `I` `Z` `C`) |
+| Disassembly | Disassemblied instructions following from the program counter |
+| Memory | Hexdump of memory regions with ASCII representation |
+| Instructions | Execution history with register states |
+| Performance | Real-time speed metrics (current, average, 1% low, 0.1% low) |
 
-The TUI requires a terminal size of at least 80×19 characters and supports dark backgrounds for reduced eye strain.
+*Note: The TUI requires a terminal size of at least 80×19 characters.*
 
-## Architecture Overview
+## Architecture
+
+### Overview
 
 *TL;DR: The architecture is modular, therefore each subsystem will handle their own distinct part of CPU behavior.*
 
@@ -150,9 +184,11 @@ The emulator is structured around several core modules. The CPU module (`cpu.c/.
 
 All 6502 addressing modes are implemented in `addressing.c/.h` with proper page-crossing detection. The instruction system uses a 256-entry dispatch table with metadata, where individual handlers implement operation semantics and timing. Stack operations (`stack.c/.h`) cover the $0100–$01FF range with both 8-bit and 16-bit push/pop support. Additional utilities handle execution tracing and binary loading.
 
-## Memory Map
+### Memory
 
-The default configuration uses a 32KB RAM / 32KB ROM split:
+#### Memory Map
+
+The default configuration uses a 32KiB RAM / 32KiB ROM split:
 
 |       Range | Type | Purpose                                    |
 | ----------: | ---- | ------------------------------------------ |
@@ -166,7 +202,7 @@ The default configuration uses a 32KB RAM / 32KB ROM split:
 
 This memory layout is configurable both through command-line options (`--ram-start`, `--ram-size`, `--rom-start`, `--rom-size`) and the region-based API, which means the emulator can mimic different 6502-based systems.
 
-### Configuring Memory Regions
+#### Configure
 
 The emulator uses a region-based memory system that allows flexible configuration:
 
@@ -174,10 +210,10 @@ The emulator uses a region-based memory system that allows flexible configuratio
 // Clear any existing regions
 mem_region_clear();
 
-// Add 32KB RAM at $0000-$7FFF
+// Add 32KiB RAM at $0000-$7FFF
 mem_region_add_ram(0x0000, 0x8000);
 
-// Add 32KB ROM at $8000-$FFFF
+// Add 32KiB ROM at $8000-$FFFF
 mem_region_add_rom(0x8000, 0x8000);
 
 // Load ROM file into memory
@@ -208,15 +244,15 @@ mem_region_add_io(0x6000, 0x1000, io_read, io_write, NULL);
 
 ROM regions are automatically write-protected. Writes to ROM addresses are silently ignored, matching real hardware behavior.
 
-## Accuracy Notes
+### Accuracy
 
 *TL;DR: every CPU instruction is emulated at the same number of clock cycles as real hardware, including page-crossing delays and branching penalties. Also, those hardware-based quirks are emulated, too.*
 
 Timing follows the original hardware specifications with base cycle counts per opcode. Additional cycles are added for page crossings on indexed reads (ABSX/ABSY/INDY), taken branches, and page boundary crossings during branch execution.
 
-Instruction timing and NMOS-specific hardware oddities have been matched cycle-for-cycle with the original microprocessor. Such as Zero-page indexed addressing modes wrapping at the `$00FF` boundary, or `(IND,X)` pointer calculations wrapping within the zero page. See the CPU Variant Differences section for details on NMOS vs CMOS behavioral differences.
+Instruction timing and NMOS-specific hardware oddities have been matched cycle-for-cycle with the original microprocessor, such as Zero-page indexed addressing modes wrapping at the `$00FF` boundary, or `(IND,X)` pointer calculations wrapping within the zero page. See the CPU Variant Differences section for details on NMOS vs CMOS behavioral differences.
 
-## CPU Variant Differences
+### CPU Variant
 
 *TL;DR: NMOS and CMOS 65C02 behave differently in subtle but important ways. this emulator models both.*
 
@@ -231,11 +267,11 @@ The emulator supports both NMOS 6502 and CMOS 65C02 modes with the following beh
 
 The decimal (BCD) mode `N`/`Z` flag behavior is the most commonly encountered difference in practice. Both the carry flag (`C`) and overflow flag (`V`) behave identically between variants.
 
-## Interrupt Controller
+### Interrupt
 
 The emulator includes a comprehensive interrupt controller that accurately models 6502 interrupt behavior:
 
-### Features
+#### Features
 
 | Feature                        | Description                                                      |
 |---------------------------------|------------------------------------------------------------------|
@@ -248,7 +284,7 @@ The emulator includes a comprehensive interrupt controller that accurately model
 | Statistics Tracking             | Counts total `IRQ`s, `NMI`s, `BRK`s for profiling                      |
 | Hardware-Accurate Timing        | 7-cycle interrupt sequence models real 6502 hardware             |
 
-### Interrupts
+#### Interrupt List
 
 | Type | Trigger | Maskable | Vector | B Flag |
 |------|---------|----------|--------|--------|
@@ -256,7 +292,7 @@ The emulator includes a comprehensive interrupt controller that accurately model
 | `IRQ` | Level | Yes (`I` flag) | `$FFFE` | Clear (0) |
 | `NMI` | Edge (falling) | No | `$FFFA` | Clear (0) |
 
-### Usage Example
+#### Usage Example
 
 ```c
 #include "interrupt.h"
@@ -283,7 +319,7 @@ interrupt_dump_history();
 interrupt_dump_stats();
 ```
 
-### Running the Interrupt Test
+#### Running the Interrupt Test
 
 ```bash
 make interrupt-test
@@ -292,7 +328,7 @@ make interrupt-test
 
 The interrupt test demonstrates BRK, IRQ, NMI, edge detection, priority handling, and history tracking.
 
-## Supported Instructions
+### Supported Instructions
 
 All official 6502 opcodes are implemented. When running in NMOS mode, undocumented opcodes are supported: `LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`, and common NOP variants used on real NMOS parts. Highly unstable opcodes (such as `$9B`, `$9C`, `$9E`, `$9F`) are intentionally omitted due to unpredictable behavior on real hardware.
 
@@ -386,24 +422,26 @@ bin/functional_test
 bin/functional_test -c 65c02
 ```
 
-The functional test runner (`tests/6502_functional_test/run_functional_test.c`) configures 64KB of RAM, loads the test binary, and detects test success or failure by monitoring the program counter. Test progress is displayed as dots(`.`), with each dot representing a million cycles.
+The functional test runner (`tests/6502_functional_test/run_functional_test.c`) configures 64KiB of RAM, loads the test binary, and detects test success or failure by monitoring the program counter. Test progress is displayed as dots(`.`), with each dot representing a million cycles.
 
 ### Basic Verification Tests
 
-The project also includes a small example ROM, with Host tools, which we call the *verification test suite* in `tests/verify_test.c` for basic verifications:
+The project also includes a small example ROM, with Host tools, which we call the *verification test suite*, in `tests/verify_test.c` for basic verifications:
 
 ```bash
 # NMOS 6502 verification
 make verify
 bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 
-# Build and run 65C02 verification tests
+# CMOS 65C02 verification
 cd tests/minimal && python3 build_65c02_test.py && cd ../..
 clang -std=c99 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
 bin/verify_65c02_test
 ```
 
-On top of the 6502 test suite, 65C02 test suite also validates all of the new CMOS instructions: BRA, PHX, PHY, PLX, PLY, STZ (all addressing modes), TSB, and TRB.
+On top of the 6502 test suite, 65C02 test suite also validates all of the new CMOS instructions: `BRA`, `PHX`, `PHY`, `PLX`, `PLY`, `STZ` (all addressing modes), `TSB`, and `TRB`.
+
+*Note: Python 3 is needed to build the 65C02 verification tests.*
 
 ## Limitations
 
@@ -414,7 +452,8 @@ This is a CPU-focused emulator without peripheral device implementations (PPU, A
 The codebase follows consistent naming conventions: global identifiers use ALL_CAPS (such as `REG`, `BUS`, `EA`), typedefs are prefixed with `T_` (like `T_REGISTER`), and constants or macros use ALL_CAPS (such as `FLAG_C`). Code is indented with 4 spaces, and the standard practice of placing declarations in `.h` files and definitions in `.c` files is followed throughout.
 
 ## Project Layout
-```
+
+```Text
 .
 ├── src/                      # Core sources
 │   ├── addressing.c
@@ -467,11 +506,11 @@ This implementation is based on the MOS Technology 6502 Programming Manual, docu
 
 ## License
 
-See the [LICENSE](LICENSE) file for licensing terms.
+This project is being protected under the GNU Affero General Public License Version 3.0. For licensing terms, please see the [LICENSE](LICENSE).
 
 ### Open Source License
 
-6502_functional_test, Made by Klaus Dormann, and this project's related sources are protected under the GNU GPL Version 3 License. For licensing terms, Please see the [README of the 6502_functional_test](tests/6502_functional_test/README.md).
+[6502_functional_test](https://github.com/klaus-dormann/6502_functional_test) and this project's related sources in the [tests/6502_functional_test](tests/6502_functional_test) folder are protected under the GNU General Public License Version 3.0. For licensing terms, please see the [README of the 6502_functional_test](tests/6502_functional_test/README.md) and [LICENSE of the 6502_functional_test](tests/6502_functional_test/LICENSE).
 
 ## Also
 

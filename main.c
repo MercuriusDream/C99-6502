@@ -1,7 +1,15 @@
+#ifndef NO_TUI_MONITOR
+#define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef NO_TUI_MONITOR
 #include <unistd.h>
+#endif
+
 #include "types.h"
 #include "cpu.h"
 #include "bus.h"
@@ -10,7 +18,11 @@
 #include "memory.h"
 #include "trace.h"
 #include "loader.h"
+
+#ifndef NO_TUI_MONITOR
 #include "tui_monitor.h"
+#endif
+
 #include "logging.h"
 
 typedef enum {
@@ -22,8 +34,10 @@ typedef enum {
     ARG_RAM_START,
     ARG_RAM_SIZE,
     ARG_ROM_START,
-    ARG_ROM_SIZE,
-    ARG_MONITOR
+    ARG_ROM_SIZE
+#ifndef NO_TUI_MONITOR
+    ,ARG_MONITOR
+#endif
 } ArgType;
 
 static ArgType parse_arg(const char* arg) {
@@ -43,29 +57,35 @@ static ArgType parse_arg(const char* arg) {
         return ARG_ROM_START;
     } else if (strcmp(arg, "-S") == 0 || strcmp(arg, "--rom-size") == 0) {
         return ARG_ROM_SIZE;
+#ifndef NO_TUI_MONITOR
     } else if (strcmp(arg, "-m") == 0 || strcmp(arg, "--monitor") == 0) {
         return ARG_MONITOR;
+#endif
     }
     return ARG_UNKNOWN;
 }
 
+#ifndef NO_TUI_MONITOR
 // Forward declaration
 static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
                              MEM_TWO_WORDS rom_start, MEM_TWO_WORDS rom_size,
                              CPU_VARIANT cpu_variant);
+#endif
 
 int main(int argc, char** argv) {
     int enable_trace = 0;
+#ifndef NO_TUI_MONITOR
     int enable_monitor = 0;
+#endif
     const char* rom_file = NULL;
     MEM_TWO_WORDS rom_addr = 0x8000;
     CPU_VARIANT cpu_variant = CPU_VARIANT_NMOS_6502;  // Default to NMOS
 
     // Memory configuration defaults
     MEM_TWO_WORDS ram_start = 0x0000;
-    MEM_TWO_WORDS ram_size = 0x8000;  // 32KB
+    MEM_TWO_WORDS ram_size = 0x8000;  // 32KiB
     MEM_TWO_WORDS rom_start = 0x8000;
-    MEM_TWO_WORDS rom_size = 0x8000;  // 32KB
+    MEM_TWO_WORDS rom_size = 0x8000;  // 32KiB
 
     // Parse command line arguments
     for (int i=1; i<argc; i++) {
@@ -76,9 +96,11 @@ int main(int argc, char** argv) {
                 enable_trace = 1;
                 break;
 
+#ifndef NO_TUI_MONITOR
             case ARG_MONITOR:
                 enable_monitor = 1;
                 break;
+#endif
 
             case ARG_FILE:
                 if (i+1 < argc) {
@@ -211,6 +233,7 @@ int main(int argc, char** argv) {
         logging("Trace : True", 0, 1, 0, NULL, LOG_INFO);
     }
 
+#ifndef NO_TUI_MONITOR
     // Run in monitor mode if requested
     if (enable_monitor) {
         logging("Starting TUI monitor...", 0, 1, 0, NULL, LOG_INFO);
@@ -218,6 +241,7 @@ int main(int argc, char** argv) {
         run_monitor_mode(ram_start, ram_size, rom_start, rom_size, cpu_variant);
         return 0;
     }
+#endif
 
     // Normal execution mode
     logging("All set...", 0, 1, 0, NULL, LOG_INFO);
@@ -240,6 +264,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+#ifndef NO_TUI_MONITOR
 // TUI Monitor mode implementation
 #define UPDATE_INTERVAL_MS 10
 #define FRAME_TIME_US (UPDATE_INTERVAL_MS * 1000)
@@ -334,3 +359,4 @@ static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
     snprintf(cycles_msg, sizeof(cycles_msg), "Total cycles executed: %llu", (unsigned long long)monitor.total_cycles);
     logging(cycles_msg, 0, 1, 0, NULL, LOG_INFO);
 }
+#endif // EOF
