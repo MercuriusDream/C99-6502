@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include "tui_monitor.h"
 #include "cpu.h"
 #include "bus.h"
@@ -781,6 +782,7 @@ void monitor_log_instruction(MonitorState* state, MEM_TWO_WORDS pc, MEM_WORD opc
 
     const INST* meta = &INST_TABLE[opcode >> 4][opcode & 0x0F];
     strncpy(entry->mnemonic, meta->CMD, sizeof(entry->mnemonic) - 1);
+    entry->mnemonic[sizeof(entry->mnemonic) - 1] = '\0';
 
     // Simple state change tracking
     snprintf(entry->state_change, sizeof(entry->state_change),
@@ -809,11 +811,14 @@ void monitor_update_bus(MonitorState* state, BusState bus_state, MEM_TWO_WORDS a
 
     // Determine target region
     if (addr < state->sys_config.ram_start + state->sys_config.ram_size) {
-        strncpy(state->bus.target, "RAM", sizeof(state->bus.target));
+        strncpy(state->bus.target, "RAM", sizeof(state->bus.target) - 1);
+        state->bus.target[sizeof(state->bus.target) - 1] = '\0';
     } else if (addr >= state->sys_config.rom_start) {
-        strncpy(state->bus.target, "ROM", sizeof(state->bus.target));
+        strncpy(state->bus.target, "ROM", sizeof(state->bus.target) - 1);
+        state->bus.target[sizeof(state->bus.target) - 1] = '\0';
     } else {
-        strncpy(state->bus.target, "Unmapped", sizeof(state->bus.target));
+        strncpy(state->bus.target, "Unmapped", sizeof(state->bus.target) - 1);
+        state->bus.target[sizeof(state->bus.target) - 1] = '\0';
     }
 }
 

@@ -13,30 +13,30 @@ void logging(char* log_text, int file_write, int newline, int type_prefix, FILE*
         if (newline) {
             switch (type) {
                 case LOG_INFO:
-                    sprintf(file_buffer, "[INFO] %s\n", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[INFO] %s\n", log_text);
                     break;
                 case LOG_WARN:
-                    sprintf(file_buffer, "[WARN] %s\n", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[WARN] %s\n", log_text);
                     break;
                 case LOG_ERROR:
-                    sprintf(file_buffer, "[ERROR] %s\n", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[ERROR] %s\n", log_text);
                     break;
                 default:
-                    sprintf(file_buffer, "[UNSPEC] %s\n", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[UNSPEC] %s\n", log_text);
             }
         } else {
             switch (type) {
                 case LOG_INFO:
-                    sprintf(file_buffer, "[INFO] %s", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[INFO] %s", log_text);
                     break;
                 case LOG_WARN:
-                    sprintf(file_buffer, "[WARN] %s", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[WARN] %s", log_text);
                     break;
                 case LOG_ERROR:
-                    sprintf(file_buffer, "[ERROR] %s", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[ERROR] %s", log_text);
                     break;
                 default:
-                    sprintf(file_buffer, "[UNSPEC] %s", log_text);
+                    snprintf(file_buffer, sizeof(file_buffer), "[UNSPEC] %s", log_text);
             }
         }
         fprintf(file, "%s", file_buffer);
@@ -47,37 +47,37 @@ void logging(char* log_text, int file_write, int newline, int type_prefix, FILE*
         if (newline) {
             switch (type) {
                 case LOG_INFO:
-                    sprintf(console_buffer, "[INFO] %s\n", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[INFO] %s\n", log_text);
                     break;
                 case LOG_WARN:
-                    sprintf(console_buffer, "[WARN] %s\n", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[WARN] %s\n", log_text);
                     break;
                 case LOG_ERROR:
-                    sprintf(console_buffer, "[ERROR] %s\n", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[ERROR] %s\n", log_text);
                     break;
                 default:
-                    sprintf(console_buffer, "[UNSPEC] %s\n", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[UNSPEC] %s\n", log_text);
             }
         } else {
             switch (type) {
                 case LOG_INFO:
-                    sprintf(console_buffer, "[INFO] %s", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[INFO] %s", log_text);
                     break;
                 case LOG_WARN:
-                    sprintf(console_buffer, "[WARN] %s", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[WARN] %s", log_text);
                     break;
                 case LOG_ERROR:
-                    sprintf(console_buffer, "[ERROR] %s", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[ERROR] %s", log_text);
                     break;
                 default:
-                    sprintf(console_buffer, "[UNSPEC] %s", log_text);
+                    snprintf(console_buffer, sizeof(console_buffer), "[UNSPEC] %s", log_text);
             }
         }
     } else {
         if (newline)
-            sprintf(console_buffer, "%s\n", log_text);
+            snprintf(console_buffer, sizeof(console_buffer), "%s\n", log_text);
         else
-            sprintf(console_buffer, "%s", log_text);
+            snprintf(console_buffer, sizeof(console_buffer), "%s", log_text);
     }
 
     printf("%s", console_buffer);

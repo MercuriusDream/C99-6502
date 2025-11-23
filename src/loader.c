@@ -18,6 +18,12 @@ int load_bin_region(const char* PATH, MEM_TWO_WORDS ADDR) {
         off += (MEM_TWO_WORDS)n;
     }
 
+    // Check for read errors (not just EOF)
+    if (ferror(f)) {
+        fclose(f);
+        return -1;
+    }
+
     fclose(f);
     return 0;
 }

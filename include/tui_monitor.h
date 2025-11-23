@@ -1,6 +1,7 @@
 #ifndef TUI_MONITOR_H
 #define TUI_MONITOR_H
 
+#define _POSIX_C_SOURCE 200809L
 #include <ncurses.h>
 #include <time.h>
 #include "types.h"

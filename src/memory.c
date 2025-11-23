@@ -21,6 +21,9 @@ void mem_region_clear() {
 int mem_region_add_ram(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
+    // Check for integer overflow: START + SIZE must not exceed 0x10000 (64KB)
+    if (SIZE == 0 || START > 0xFFFF - SIZE + 1) return -1;
+
     MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
     region->END = START + SIZE - 1;
@@ -42,6 +45,9 @@ int mem_region_add_ram(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
 
 int mem_region_add_rom(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
+
+    // Check for integer overflow: START + SIZE must not exceed 0x10000 (64KB)
+    if (SIZE == 0 || START > 0xFFFF - SIZE + 1) return -1;
 
     MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
@@ -65,6 +71,9 @@ int mem_region_add_rom(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
 int mem_region_add_io(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE,
                       bus_read_fn READ_HANDLER, bus_write_fn WRITE_HANDLER, void* CTX) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
+
+    // Check for integer overflow: START + SIZE must not exceed 0x10000 (64KB)
+    if (SIZE == 0 || START > 0xFFFF - SIZE + 1) return -1;
 
     MEM_REGION* region = &REGIONS[REGION_COUNT++];
     region->START = START;
