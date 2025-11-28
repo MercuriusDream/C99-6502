@@ -190,8 +190,8 @@ All 6502 addressing modes are implemented in `addressing.c/.h` with proper page-
 
 The default configuration uses a 32KiB RAM / 32KiB ROM split:
 
-|       Range | Type | Purpose                                    |
-| ----------: | ---- | ------------------------------------------ |
+|    Range    | Type | Purpose                                    |
+| ----------- | ---- | ------------------------------------------ |
 | $0000–$00FF | RAM  | Zero Page                                  |
 | $0100–$01FF | RAM  | Stack                                      |
 | $0200–$7FFF | RAM  | General RAM                                |
