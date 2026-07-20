@@ -36,10 +36,10 @@ typedef enum
 #define CLR_FLAG(b) (REG.P &= ~(b))
 #define GET_FLAG(b) ((REG.P & (b)) != 0)
 
-#define CMD_LEN 4
+#define CMD_LEN 5
 
-typedef char SIGNED_MEM_WORD;
-typedef short SIGNED_MEM_TWO_WORDS;
+typedef int8_t SIGNED_MEM_WORD;
+typedef int16_t SIGNED_MEM_TWO_WORDS;
 typedef unsigned char MEM_WORD;
 typedef unsigned short MEM_TWO_WORDS;
 

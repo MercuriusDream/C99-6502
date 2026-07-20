@@ -4,7 +4,7 @@
 
 ## 소개
 
-MOS 6502 마이크로프로세서 에뮬레이터의 다양한 명령과 주소 지정 모드의 작동을 검증하기 위한 포괄적인 테스트를 제공하는 ROM입니다. 본 테스트 도구는 6502 Assembly로 작성된 소스 코드 (`test.asm`), Python 3으로 작성된 빌드용 스크립트 (`build_test_rom.py`), 마지막으로 자동화된 검증을 위한 도구 (`verify_test.c`)로 구성되어 있습니다.
+MOS 6502 마이크로프로세서 에뮬레이터의 다양한 명령과 주소 지정 모드의 작동을 검증하기 위한 포괄적인 테스트를 제공하는 ROM입니다. 본 테스트 도구는 Python 3으로 작성된 빌드용 스크립트 (`build_test_rom.py`), 마지막으로 자동화된 검증을 위한 도구 (`verify_test.c`)로 구성되어 있습니다.
 
 ## ROM 빌드
 
@@ -28,11 +28,7 @@ python3 build_test_rom.py
 
 ### 검증 과정 포함
 ```bash
-clang -std=c99 -O2 verify_test.c cpu.c bus.c memory.c stack.c \
-    addressing.c instructions_implementation.c instructions_handlers.c \
-    instructions_table.c loader.c trace.c -o verify_test
-
-./verify_test
+make verify
 ```
 
 ## 테스트 영역

@@ -5,9 +5,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <stdint.h>
 
 #ifndef NO_TUI_MONITOR
 #include <unistd.h>
+#include <signal.h>
+
+static volatile sig_atomic_t g_monitor_quit = 0;
+static void monitor_signal_handler(int sig) {
+    (void)sig;
+    g_monitor_quit = 1;
+}
 #endif
 
 #include "types.h"
@@ -65,6 +74,18 @@ static ArgType parse_arg(const char* arg) {
     return ARG_UNKNOWN;
 }
 
+// Parse a numeric CLI argument with the given base and bounded range.
+// Returns 0 on success (stores value in *out), -1 on parse/range error.
+static int parse_numeric(const char* str, int base, long min_val, long max_val, long* out) {
+    errno = 0;
+    char* endptr = NULL;
+    long val = strtol(str, &endptr, base);
+    if (errno != 0 || endptr == str || *endptr != '\0') return -1;
+    if (val < min_val || val > max_val) return -1;
+    *out = val;
+    return 0;
+}
+
 #ifndef NO_TUI_MONITOR
 // Forward declaration
 static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
@@ -73,6 +94,9 @@ static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
 #endif
 
 int main(int argc, char** argv) {
+    // Ensure region DATA buffers are freed on every exit path.
+    atexit(mem_region_clear);
+
     int enable_trace = 0;
 #ifndef NO_TUI_MONITOR
     int enable_monitor = 0;
@@ -110,31 +134,66 @@ int main(int argc, char** argv) {
 
             case ARG_ADDRESS:
                 if (i + 1 < argc) {
-                    rom_addr = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                    long v;
+                    if (parse_numeric(argv[++i], 16, 0, 0xFFFF, &v) != 0) {
+                        char msg[MAX_LOG_LENGTH];
+                        snprintf(msg, sizeof(msg), "Invalid address: %s", argv[i]);
+                        logging(msg, 0, 1, 1, NULL, LOG_WARN);
+                        return 1;
+                    }
+                    rom_addr = (MEM_TWO_WORDS)v;
                 }
                 break;
 
             case ARG_RAM_START:
                 if (i + 1 < argc) {
-                    ram_start = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                    long v;
+                    if (parse_numeric(argv[++i], 16, 0, 0xFFFF, &v) != 0) {
+                        char msg[MAX_LOG_LENGTH];
+                        snprintf(msg, sizeof(msg), "Invalid RAM start: %s", argv[i]);
+                        logging(msg, 0, 1, 1, NULL, LOG_WARN);
+                        return 1;
+                    }
+                    ram_start = (MEM_TWO_WORDS)v;
                 }
                 break;
 
             case ARG_RAM_SIZE:
                 if (i + 1 < argc) {
-                    ram_size = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 0);
+                    long v;
+                    if (parse_numeric(argv[++i], 0, 1, 0x10000, &v) != 0) {
+                        char msg[MAX_LOG_LENGTH];
+                        snprintf(msg, sizeof(msg), "Invalid RAM size: %s", argv[i]);
+                        logging(msg, 0, 1, 1, NULL, LOG_WARN);
+                        return 1;
+                    }
+                    ram_size = (MEM_TWO_WORDS)v;
                 }
                 break;
 
             case ARG_ROM_START:
                 if (i + 1 < argc) {
-                    rom_start = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 16);
+                    long v;
+                    if (parse_numeric(argv[++i], 16, 0, 0xFFFF, &v) != 0) {
+                        char msg[MAX_LOG_LENGTH];
+                        snprintf(msg, sizeof(msg), "Invalid ROM start: %s", argv[i]);
+                        logging(msg, 0, 1, 1, NULL, LOG_WARN);
+                        return 1;
+                    }
+                    rom_start = (MEM_TWO_WORDS)v;
                 }
                 break;
 
             case ARG_ROM_SIZE:
                 if (i + 1 < argc) {
-                    rom_size = (MEM_TWO_WORDS)strtol(argv[++i], NULL, 0);
+                    long v;
+                    if (parse_numeric(argv[++i], 0, 1, 0x10000, &v) != 0) {
+                        char msg[MAX_LOG_LENGTH];
+                        snprintf(msg, sizeof(msg), "Invalid ROM size: %s", argv[i]);
+                        logging(msg, 0, 1, 1, NULL, LOG_WARN);
+                        return 1;
+                    }
+                    rom_size = (MEM_TWO_WORDS)v;
                 }
                 break;
 
@@ -167,6 +226,16 @@ int main(int argc, char** argv) {
 
     // Set CPU variant
     cpu_set_variant(cpu_variant);
+
+    // Validate combined region extents now that all options are parsed.
+    if ((uint32_t)ram_start + ram_size > 0x10000) {
+        logging("RAM region start+size exceeds 64KiB address space", 0, 1, 1, NULL, LOG_WARN);
+        return 1;
+    }
+    if ((uint32_t)rom_start + rom_size > 0x10000) {
+        logging("ROM region start+size exceeds 64KiB address space", 0, 1, 1, NULL, LOG_WARN);
+        return 1;
+    }
 
     char msg[MAX_LOG_LENGTH];
     snprintf(msg, sizeof(msg), "C99-6502... Running in %s MODE",
@@ -292,6 +361,12 @@ static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
     tui_init();
     monitor_state_init(&monitor);
 
+    // Install signal handlers so Ctrl-C/SIGTERM/SIGHUP restore the terminal via atexit.
+    atexit(tui_cleanup);
+    signal(SIGINT, monitor_signal_handler);
+    signal(SIGTERM, monitor_signal_handler);
+    signal(SIGHUP, monitor_signal_handler);
+
     // Set system configuration
     monitor.sys_config.ram_start = ram_start;
     monitor.sys_config.ram_size = ram_size;
@@ -304,7 +379,7 @@ static void run_monitor_mode(MEM_TWO_WORDS ram_start, MEM_TWO_WORDS ram_size,
     monitor_add_watch(&monitor, 0x0200);
     monitor_add_watch(&monitor, 0x0201);
 
-    while (!monitor.should_quit) {
+    while (!monitor.should_quit && !g_monitor_quit) {
         struct timespec frame_start;
         clock_gettime(CLOCK_MONOTONIC, &frame_start);
 

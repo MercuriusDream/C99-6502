@@ -14,7 +14,7 @@ The Systems Software isn't, indeed, that sophomore-friendly. So I decided to bui
 
 This project is a cycle-accurate MOS 6502 emulator written in C99 that faithfully reproduces the behavior of the original NMOS 6502, including its documented quirks and timing characteristics.
 
-The emulator supports the complete instruction set with stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
+The emulator supports the full documented instruction set plus commonly-used stable undocumented opcodes and handles cycle counting with page-crossing penalties and branch timing. Hardware-specific behaviors like the indirect `JMP ($xxFF)` wrapping bug, zero-page address wrapping, and NMOS decimal mode flag semantics are accurately implemented. The codebase is organized into modular components covering the bus interface, region-based memory management, CPU core, addressing modes, instruction dispatch, stack operations, and execution tracing.
 
 Memory configuration uses a region-based system where the address space is divided into separate RAM, ROM, and I/O regions. The default configuration allocates 32KiB RAM ($0000-$7FFF) and 32KiB ROM ($8000-$FFFF), mirroring the memory layout of many classic 6502 systems. ROM regions are automatically write-protected, and I/O regions support custom read/write handlers for device emulation. This flexible architecture enables accurate emulation of different systems *(e.g. NES, Apple II, Commodore 64)* by configuring appropriate memory maps for each platform.
 
@@ -262,7 +262,7 @@ The emulator supports both NMOS 6502 and CMOS 65C02 modes with the following beh
 | ------ | --------- | ----------- |
 | BCD (Decimal) Mode Flags | `N` and `Z` flags reflect the binary result before BCD adjustment; `V` is computed from the binary operation. | `N` and `Z` flags reflect the adjusted decimal result; `V` is computed from the binary operation. |
 | Indirect `JMP` at `$xxFF` | `JMP ($xxFF)` wraps within the page, which, reads high byte from `$xx00` of the same page. | Page-crossing bug is fixed; `JMP ($xxFF)` reads the high byte from the next page. |
-| Instruction Set | Base 6502 instruction set (56 official opcodes), including supported NMOS undocumented opcodes (`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`). | Base 6502 instruction set plus 10 new CMOS instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero - 4 addressing modes), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), `STP` (Stop Processor). Also includes 32 Rockwell/WDC bit manipulation instructions: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), `BBS0-7` (Branch on Bit Set). Undocumented opcodes are treated as NOPs. |
+| Instruction Set | Base 6502 instruction set (56 official instructions / 151 documented opcodes), including supported NMOS undocumented opcodes (`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`). | Base 6502 instruction set plus 10 new CMOS instructions: `BRA` (Branch Always), `PHX`/`PHY` (Push X/Y), `PLX`/`PLY` (Pull X/Y), `STZ` (Store Zero - 4 addressing modes), `TRB`/`TSB` (Test and Reset/Set Bits), `WAI` (Wait for Interrupt), `STP` (Stop Processor). Also includes 32 Rockwell/WDC bit manipulation instructions: `RMB0-7` (Reset Memory Bit), `SMB0-7` (Set Memory Bit), `BBR0-7` (Branch on Bit Reset), `BBS0-7` (Branch on Bit Set). Undocumented opcodes are treated as NOPs. |
 | Variant Checking | Instructions execute without variant checks. | 65C02-specific instructions only execute when CPU is in 65C02 mode; they become NOPs in NMOS mode. |
 
 The decimal (BCD) mode `N`/`Z` flag behavior is the most commonly encountered difference in practice. Both the carry flag (`C`) and overflow flag (`V`) behave identically between variants.
@@ -340,7 +340,7 @@ In 65C02 mode, all standard WDC 65C02 instructions are supported, including the 
 
 ## Debugging and Profiling Tools
 
-The emulator includes a comprehensive debugging and profiling system to help analyze program execution, find bugs, or optimize code. The debugging features are provided through the `debugging.h` library. Key features include:
+The emulator includes a comprehensive debugging and profiling system to help analyze program execution, find bugs, or optimize code. The debugging features are provided through the `debugger.h` library. Key features include:
 
 ### Features Overview
 
@@ -358,7 +358,7 @@ The emulator includes a comprehensive debugging and profiling system to help ana
 ### Example Usage
 
 ```c
-#include "debugging.h"
+#include "debugger.h"
 
 // Initialize debugger
 debugger_init();
@@ -426,7 +426,7 @@ The functional test runner (`tests/6502_functional_test/run_functional_test.c`) 
 
 ### Basic Verification Tests
 
-The project also includes a small example ROM, with Host tools, which we call the *verification test suite*, in `tests/verify_test.c` for basic verifications:
+The project also includes a small example ROM, with Host tools, which we call the *verification test suite*, in `tests/minimal/verify_test.c` for basic verifications:
 
 ```bash
 # NMOS 6502 verification
@@ -434,8 +434,7 @@ make verify
 bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 
 # CMOS 65C02 verification
-cd tests/minimal && python3 build_65c02_test.py && cd ../..
-clang -std=c99 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
+make verify-65c02
 bin/verify_65c02_test
 ```
 
@@ -459,7 +458,7 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── debugging.c           # Debugging and profiling
+│   ├── debugger.c            # Debugging and profiling
 │   ├── instructions_handlers.c        # Opcode dispatch
 │   ├── instructions_implementation.c  # Opcode handlers
 │   ├── instructions_table.c           # Opcode metadata
@@ -475,12 +474,14 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 │   ├── minimal/              # Minimal and 65C02 test suite
 │   ├── verify_test.c         # Basic verification
 │   ├── debug_test.c          # Debugger test
-│   └── interrupt_test.c      # Interrupt test
+│   ├── interrupt_test.c      # Interrupt test
+│   ├── simple_debug_test.c   # Simple debugger test
+│   └── undocumented_test.c    # Undocumented opcodes test
 ├── include/                  # Header files
 │   ├── addressing.h
 │   ├── bus.h
 │   ├── cpu.h
-│   ├── debugging.h
+│   ├── debugger.h
 │   ├── instructions_handlers.h
 │   ├── instructions_implementation.h
 │   ├── instructions_table.h
@@ -502,7 +503,7 @@ The codebase follows consistent naming conventions: global identifiers use ALL_C
 
 ## References
 
-This implementation is based on the MOS Technology 6502 Programming Manual, documentation from [6502.org](http://6502.org/), and insights from the [Visual 6502](http://visual6502.org/) transistor-level simulation project.
+This implementation is based on the MOS Technology 6502 Programming Manual, documentation from [Masswerk's 6502 reference](https://www.masswerk.at/6502/), and insights from the [Visual 6502](http://visual6502.org/) transistor-level simulation project.
 
 ## License
 
@@ -510,7 +511,7 @@ This project is being protected under the GNU Affero General Public License Vers
 
 ### Open Source License
 
-[6502_functional_test](https://github.com/klaus-dormann/6502_functional_test) and this project's related sources in the [tests/6502_functional_test](tests/6502_functional_test) folder are protected under the GNU General Public License Version 3.0. For licensing terms, please see the [README of the 6502_functional_test](tests/6502_functional_test/README.md) and [LICENSE of the 6502_functional_test](tests/6502_functional_test/LICENSE).
+[6502_functional_test](https://github.com/Klaus2m5/6502_65C02_functional_tests) and this project's related sources in the [tests/6502_functional_test](tests/6502_functional_test) folder are protected under the GNU General Public License Version 3.0. For licensing terms, please see the [README of the 6502_functional_test](tests/6502_functional_test/README.md) and [LICENSE of the 6502_functional_test](tests/6502_functional_test/LICENSE).
 
 ## Also
 

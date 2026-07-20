@@ -3,6 +3,7 @@
 #include "types.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 // Region-based memory system
 static MEM_REGION REGIONS[MAX_MEM_REGIONS];
@@ -18,12 +19,28 @@ void mem_region_clear() {
     REGION_COUNT = 0;
 }
 
+// Reject if the proposed [START, END] overlaps any existing region.
+static int region_overlaps(MEM_TWO_WORDS START, MEM_TWO_WORDS END) {
+    for (int i = 0; i < REGION_COUNT; i++) {
+        if (START <= REGIONS[i].END && REGIONS[i].START <= END) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int mem_region_add_ram(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
+    // Validate size: SIZE==0 underflows END; START+SIZE must fit in 16-bit space.
+    if (SIZE == 0 || (uint32_t)START + SIZE > 0x10000) return -1;
+
+    MEM_TWO_WORDS END = (MEM_TWO_WORDS)((uint32_t)START + SIZE - 1);
+    if (region_overlaps(START, END)) return -1;
+
     MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
-    region->END = START + SIZE - 1;
+    region->END = END;
     region->TYPE = MEM_REGION_RAM;
     region->DATA = (MEM_WORD*)calloc(SIZE, sizeof(MEM_WORD));
 
@@ -43,9 +60,15 @@ int mem_region_add_ram(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
 int mem_region_add_rom(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
+    // Validate size: SIZE==0 underflows END; START+SIZE must fit in 16-bit space.
+    if (SIZE == 0 || (uint32_t)START + SIZE > 0x10000) return -1;
+
+    MEM_TWO_WORDS END = (MEM_TWO_WORDS)((uint32_t)START + SIZE - 1);
+    if (region_overlaps(START, END)) return -1;
+
     MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
-    region->END = START + SIZE - 1;
+    region->END = END;
     region->TYPE = MEM_REGION_ROM;
     region->DATA = (MEM_WORD*)calloc(SIZE, sizeof(MEM_WORD));
 
@@ -66,15 +89,22 @@ int mem_region_add_io(MEM_TWO_WORDS START, MEM_TWO_WORDS SIZE,
                       bus_read_fn READ_HANDLER, bus_write_fn WRITE_HANDLER, void* CTX) {
     if (REGION_COUNT >= MAX_MEM_REGIONS) return -1;
 
-    MEM_REGION* region = &REGIONS[REGION_COUNT++];
+    // Validate size: SIZE==0 underflows END; START+SIZE must fit in 16-bit space.
+    if (SIZE == 0 || (uint32_t)START + SIZE > 0x10000) return -1;
+
+    MEM_TWO_WORDS END = (MEM_TWO_WORDS)((uint32_t)START + SIZE - 1);
+    if (region_overlaps(START, END)) return -1;
+
+    MEM_REGION* region = &REGIONS[REGION_COUNT];
     region->START = START;
-    region->END = START + SIZE - 1;
+    region->END = END;
     region->TYPE = MEM_REGION_IO;
     region->DATA = NULL;
     region->READ_HANDLER = READ_HANDLER;
     region->WRITE_HANDLER = WRITE_HANDLER;
     region->CTX = CTX;
 
+    REGION_COUNT++;
     return 0;
 }
 
@@ -154,7 +184,13 @@ int mem_region_set_vector(MEM_TWO_WORDS VEC, MEM_TWO_WORDS DEST) {
     MEM_REGION* region = find_region(VEC);
     if (!region || !region->DATA) return -1;
 
+    // Both vector bytes must reside in the same region.
+    MEM_REGION* region_hi = find_region((MEM_TWO_WORDS)(VEC + 1));
+    if (region_hi != region) return -1;
+
     MEM_TWO_WORDS offset = VEC - region->START;
+    if ((uint32_t)offset + 2 > (uint32_t)(region->END - region->START + 1)) return -1;
+
     region->DATA[offset] = (MEM_WORD)(DEST & 0xFF);
     region->DATA[offset + 1] = (MEM_WORD)((DEST >> 8) & 0xFF);
     return 0;

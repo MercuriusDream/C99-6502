@@ -46,6 +46,10 @@ void DEY(void) { REG.Y = (REG.Y - 1) & 0xFF; set_zn(REG.Y); }
 void INC(void) { MEM_WORD v = (bus_read(EA) + 1) & 0xFF; bus_write(EA, v); set_zn(v); }
 void DEC(void) { MEM_WORD v = (bus_read(EA) - 1) & 0xFF; bus_write(EA, v); set_zn(v); }
 
+// 65C02 INC A / DEC A (accumulator forms of $1A / $3A)
+void INC_A(void) { REG.A = (REG.A + 1) & 0xFF; set_zn(REG.A); }
+void DEC_A(void) { REG.A = (REG.A - 1) & 0xFF; set_zn(REG.A); }
+
 void AND(void) { MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA; REG.A &= data; set_zn(REG.A); }
 void ORA(void) { MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA; REG.A |= data; set_zn(REG.A); }
 void EOR(void) { MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA; REG.A ^= data; set_zn(REG.A); }
@@ -362,6 +366,50 @@ void RRA(void) {
     v = (v >> 1) | (carry << 7);
     bus_write(EA, v);
     adc_core(v);
+}
+
+// ANC - AND operand with A, then copy bit 7 to Carry (immediate-mode illegal ops $0B/$2B)
+void ANC(void) {
+    MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA;
+    REG.A &= data;
+    set_zn(REG.A);
+    if (REG.A & 0x80) SET_FLAG(FLAG_C); else CLR_FLAG(FLAG_C);
+}
+
+// ALR (ASR) - AND operand with A, then LSR A (illegal op $4B)
+void ALR(void) {
+    MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA;
+    REG.A &= data;
+    CLR_FLAG(FLAG_C);
+    if (REG.A & 0x01) SET_FLAG(FLAG_C);
+    REG.A >>= 1;
+    set_zn(REG.A);
+}
+
+// ARR - AND operand with A, then ROR A (illegal op $6B)
+// On NMOS the flags are subtle; we implement the commonly-documented behavior:
+// A = (A & imm) ROR 1; C = bit6 of result, V = bit6 XOR bit5.
+void ARR(void) {
+    MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA;
+    REG.A &= data;
+    int carry = GET_FLAG(FLAG_C);
+    REG.A = (REG.A >> 1) | (carry << 7);
+    set_zn(REG.A);
+    // Carry = bit 6 of result
+    if (REG.A & 0x40) SET_FLAG(FLAG_C); else CLR_FLAG(FLAG_C);
+    // Overflow = bit6 XOR bit5
+    if (((REG.A >> 6) ^ (REG.A >> 5)) & 1) SET_FLAG(FLAG_V); else CLR_FLAG(FLAG_V);
+}
+
+// ALT_SBC (USBC) - alternate encoding of SBC ($EB). Behaves identically to SBC.
+void ALT_SBC(void) {
+    MEM_WORD data = HAS_EA ? bus_read(EA) : (MEM_WORD)EA;
+    sbc_core(data);
+}
+
+// KIL (JAM) - halt the CPU permanently (illegal ops $02/$12/$22/$32/$42/$52/$62/$72/$92/$B2/$D2/$F2)
+void op_kil(void) {
+    cpu_set_stopped(1);
 }
 
 // Illegal NOP variants (read but do nothing)

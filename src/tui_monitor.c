@@ -8,6 +8,11 @@
 #include <math.h>
 #include <ctype.h>
 #include <locale.h>
+#include <stdio.h>
+
+// Custom color index for dark grey background (do NOT redefine COLOR_BLACK).
+// Standard colors are 0-7; custom colors may use index 8 and above.
+#define COLOR_DARK_GREY 8
 
 // Color pairs
 #define COLOR_PANEL_BORDER 1
@@ -31,7 +36,10 @@ void tui_init(void) {
     // Set locale to support UTF-8 and multibyte characters
     setlocale(LC_ALL, "");
 
-    initscr();
+    if (!initscr()) {
+        fprintf(stderr, "cannot initialize terminal\n");
+        exit(1);
+    }
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
@@ -42,10 +50,12 @@ void tui_init(void) {
     if (has_colors()) {
         start_color();
 
-        // Use custom dark grey background if supported
+        // Use custom dark grey background if supported.
+        // NOTE: do NOT redefine COLOR_BLACK (that shifts all black content to grey,
+        // including the COLOR_HIGHLIGHT pair's foreground). Use a dedicated custom
+        // color index instead.
         if (can_change_color()) {
-            // Define a very dark grey (RGB values 0-1000 scale)
-            init_color(COLOR_BLACK, 100, 100, 100);  // Very dark grey instead of pure black
+            init_color(COLOR_DARK_GREY, 100, 100, 100);  // very dark grey
         }
 
         // Use default colors to get terminal's color scheme
@@ -74,6 +84,11 @@ void tui_init(void) {
 }
 
 void tui_cleanup(void) {
+    // Idempotent: safe to call more than once (e.g. via atexit + direct call).
+    static int cleaned_up = 0;
+    if (cleaned_up) return;
+    cleaned_up = 1;
+
     // Clear screen before exiting
     clear();
     refresh();
@@ -615,7 +630,7 @@ void draw_instruction_log(MonitorState* state, int y, int x, int width, int heig
 void draw_help_bar(int y, int x, int width) {
     attron(A_REVERSE);
     mvprintw(y, x, "%-*s", width,
-             " [S] Step  [C] Continue  [B] Break  [R] Reset  [M] Memory  [Q] Quit  [?] Help");
+             " [S] Step  [C] Continue  [B] Break  [R] Reset  [Q] Quit");
     attroff(A_REVERSE);
 }
 
@@ -625,6 +640,16 @@ void tui_draw(MonitorState* state) {
 
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
+
+    // Guard against terminal being too small to lay out the panels.
+    if (max_y < SCREEN_MIN_HEIGHT || max_x < SCREEN_MIN_WIDTH) {
+        attron(A_BOLD);
+        mvprintw(max_y / 2, (max_x > 22) ? (max_x - 22) / 2 : 0,
+                 "terminal too small");
+        attroff(A_BOLD);
+        refresh();
+        return;
+    }
 
     int y_pos = 0;
 
@@ -659,6 +684,12 @@ void tui_handle_input(MonitorState* state) {
     int ch = getch();
 
     if (ch == ERR) return;
+
+    // Handle terminal resize events explicitly (KEY_RESIZE == 410 > 127,
+    // so it would otherwise be treated as unknown input below).
+    if (ch == KEY_RESIZE) {
+        return;
+    }
 
     // Ignore non-ASCII input and flush any remaining multibyte sequences
     if (ch > 127 || ch < 0) {
@@ -781,7 +812,10 @@ void monitor_log_instruction(MonitorState* state, MEM_TWO_WORDS pc, MEM_WORD opc
     entry->opcode = opcode;
 
     const INST* meta = &INST_TABLE[opcode >> 4][opcode & 0x0F];
-    strncpy(entry->mnemonic, meta->CMD, sizeof(entry->mnemonic) - 1);
+    // CMD may not be NUL-terminated (it is a fixed-size CMD_LEN buffer), so
+    // bound the copy by CMD_LEN and NUL-terminate explicitly.
+    strncpy(entry->mnemonic, meta->CMD, CMD_LEN);
+    entry->mnemonic[CMD_LEN] = '\0';
 
     // Simple state change tracking
     snprintf(entry->state_change, sizeof(entry->state_change),

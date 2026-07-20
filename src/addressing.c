@@ -58,7 +58,7 @@ MEM_TWO_WORDS addr_indy(int* page_cross) {
     MEM_WORD hi = bus_read((zp_addr + 1) & 0xFF);
     MEM_TWO_WORDS base = (MEM_TWO_WORDS)(lo | ((MEM_TWO_WORDS)hi << 8));
     MEM_TWO_WORDS addr = base + (MEM_TWO_WORDS)REG.Y;
-    *page_cross = ((base&0xFF00) != (addr&0xFF00)) ? 1:0;
+    if (page_cross) *page_cross = ((base&0xFF00) != (addr&0xFF00)) ? 1:0;
     return addr;
 }
 

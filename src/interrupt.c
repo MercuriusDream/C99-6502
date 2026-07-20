@@ -134,7 +134,7 @@ int interrupt_step_cycle(void) {
     // but track that it consumes 7 cycles
 
     if (ic.interrupt_cycle == 0) {
-        // Execute the entire interrupt sequence
+        // Execute the entire interrupt sequence (single-shot)
         MEM_TWO_WORDS vector_addr;
         int set_b_flag = 0;
 
@@ -147,12 +147,14 @@ int interrupt_step_cycle(void) {
                 break;
 
             case INT_IRQ:
+                CYCLES += 7;  // IRQ takes 7 cycles (BRK's 7 come from CYCLE_BASE)
                 push16(REG.PC);
                 set_b_flag = 0;
                 vector_addr = IRQ_VECTOR;
                 break;
 
             case INT_NMI:
+                CYCLES += 7;  // NMI takes 7 cycles
                 push16(REG.PC);
                 set_b_flag = 0;
                 vector_addr = NMI_VECTOR;
@@ -161,18 +163,25 @@ int interrupt_step_cycle(void) {
 
             default:
                 ic.interrupt_in_progress = 0;
+                ic.current_interrupt = INT_NONE;
+                ic.interrupt_cycle = 0;
                 return 1;
         }
 
-        // Push processor status
+        // Push processor status (BRK sets B=1; IRQ/NMI force B=0)
         if (set_b_flag) {
             push8(REG.P | FLAG_B | FLAG_U);
         } else {
-            push8(REG.P | FLAG_U);
+            push8((REG.P & ~FLAG_B) | FLAG_U);
         }
 
         // Set interrupt disable flag
         SET_FLAG(FLAG_I);
+
+        // 65C02: BRK/IRQ/NMI clear the Decimal flag; NMOS does NOT
+        if (cpu_get_variant() == CPU_VARIANT_CMOS_65C02) {
+            CLR_FLAG(FLAG_D);
+        }
 
         // Wake CPU from WAI
         cpu_set_waiting(0);
@@ -180,21 +189,18 @@ int interrupt_step_cycle(void) {
         // Jump to interrupt vector
         REG.PC = bus_read16(vector_addr);
 
-        // Move to next cycle
-        ic.interrupt_cycle++;
-        return 0;  // Still in progress
-    }
-
-    // Cycles 1-6: Wait for interrupt sequence to complete
-    ic.interrupt_cycle++;
-    if (ic.interrupt_cycle >= 7) {
+        // Single-shot: sequence is complete in one call
         ic.interrupt_in_progress = 0;
         ic.current_interrupt = INT_NONE;
         ic.interrupt_cycle = 0;
         return 1;  // Complete
     }
 
-    return 0;  // Still in progress
+    // Defensive: should never reach here (single-shot), but stay consistent
+    ic.interrupt_in_progress = 0;
+    ic.current_interrupt = INT_NONE;
+    ic.interrupt_cycle = 0;
+    return 1;
 }
 
 int interrupt_is_active(void) {

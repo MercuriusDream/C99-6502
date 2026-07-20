@@ -8,7 +8,8 @@
 
 static inline char* _strdup(const char* dup_src_str) {
     char* dup_obj_str;
-    if (!(dup_obj_str = malloc(strlen(dup_src_str)+1)) || !strcpy(dup_obj_str, dup_src_str)) return NULL;
+    if (!(dup_obj_str = malloc(strlen(dup_src_str)+1))) return NULL;
+    strcpy(dup_obj_str, dup_src_str);
     return dup_obj_str;
 }
 
@@ -39,17 +40,21 @@ void debugger_init(void) {
 }
 
 void debugger_cleanup(void) {
-    // Free any allocated labels
+    // Free any allocated labels and reset state to avoid dangling pointers
     for (int i = 0; i < breakpoint_count; i++) {
         if (breakpoints[i].label) {
             free((void*)breakpoints[i].label);
+            breakpoints[i].label = NULL;
         }
     }
     for (int i = 0; i < watchpoint_count; i++) {
         if (watchpoints[i].label) {
             free((void*)watchpoints[i].label);
+            watchpoints[i].label = NULL;
         }
     }
+    breakpoint_count = 0;
+    watchpoint_count = 0;
 }
 
 
@@ -369,12 +374,16 @@ void debugger_hexdump(MEM_TWO_WORDS start_addr, MEM_TWO_WORDS length) {
     printf("[Debugger] Memory Dump from $%04X (length: %u bytes):\n",
            start_addr, length);
 
-    for (MEM_TWO_WORDS addr = start_addr; addr < start_addr + length; addr += 16) {
+    for (uint32_t done = 0; done < (uint32_t)length; done += 16) {
+        MEM_TWO_WORDS addr = (MEM_TWO_WORDS)(start_addr + done);
+        uint32_t end_off = done + 16;
+        if (end_off > (uint32_t)length) end_off = (uint32_t)length;
+
         printf("  %04X: ", addr);
 
         // Hex bytes
         for (int i = 0; i < 16; i++) {
-            if (addr + i < start_addr + length) {
+            if (done + i < end_off) {
                 printf("%02X ", bus_read(addr + i));
             } else {
                 printf("   ");
@@ -385,7 +394,7 @@ void debugger_hexdump(MEM_TWO_WORDS start_addr, MEM_TWO_WORDS length) {
 
         // ASCII representation
         for (int i = 0; i < 16; i++) {
-            if (addr + i < start_addr + length) {
+            if (done + i < end_off) {
                 MEM_WORD byte = bus_read(addr + i);
                 printf("%c", (byte >= 32 && byte < 127) ? byte : '.');
             }
@@ -410,10 +419,11 @@ void debugger_disassemble(MEM_TWO_WORDS start_addr, int num_instructions) {
         if (meta->ADDR == ADDR_IMM || meta->ADDR == ADDR_ZP ||
             meta->ADDR == ADDR_ZPX || meta->ADDR == ADDR_ZPY ||
             meta->ADDR == ADDR_INDX || meta->ADDR == ADDR_INDY ||
-            meta->ADDR == ADDR_REL) {
+            meta->ADDR == ADDR_REL || meta->ADDR == ADDR_ZP_IND) {
             operand_size = 1;
         } else if (meta->ADDR == ADDR_ABS || meta->ADDR == ADDR_ABSX ||
-                   meta->ADDR == ADDR_ABSY || meta->ADDR == ADDR_IND) {
+                   meta->ADDR == ADDR_ABSY || meta->ADDR == ADDR_IND ||
+                   meta->ADDR == ADDR_ZPREL || meta->ADDR == ADDR_ABS_IND_X) {
             operand_size = 2;
         }
 
@@ -489,10 +499,17 @@ int debugger_search_memory(MEM_TWO_WORDS start, MEM_TWO_WORDS end,
     printf("[Debugger] Searching memory $%04X-$%04X for pattern...\n", start, end);
     int found_count = 0;
 
-    for (MEM_TWO_WORDS addr = start; addr <= end - pattern_len; addr++) {
+    if (pattern_len == 0) {
+        printf("[Debugger] Found 0 match(es)\n");
+        return 0;
+    }
+
+    uint32_t bound = (uint32_t)end - pattern_len + 1;
+    for (uint32_t i = (uint32_t)start; i <= bound && i <= 0xFFFF; i++) {
+        MEM_TWO_WORDS addr = (MEM_TWO_WORDS)i;
         int match = 1;
-        for (MEM_TWO_WORDS i = 0; i < pattern_len; i++) {
-            if (bus_read(addr + i) != pattern[i]) {
+        for (MEM_TWO_WORDS j = 0; j < pattern_len; j++) {
+            if (bus_read(addr + j) != pattern[j]) {
                 match = 0;
                 break;
             }

@@ -151,7 +151,7 @@ def build_rom():
     DATA:      ${data_addr:04X}
     END:       ${start_addr + len(rom):04X}""")
 
-    print(f"""\Expected results in memory:
+    print(f"""Expected results in memory:
     $0200: $42  (LDA #$42, STA $0200)
     $0201: $10  (LDX #$10, STX $0201)
     $0202: $20  (LDY #$20, STY $0202)
@@ -160,11 +160,11 @@ def build_rom():
     $0205: $03  (AND test: $0F & $03)
     $0206: $07  (ORA test: $05 | $02)
     $0207: $F0  (EOR test: $FF ^ $0F)
-    $0208: $03  (INX x3)")
-    $0209: $03  (DEY x2 from $05)")
-    $020A: $AA  (Branch test)")
-    $020B: $06  (Subroutine: 2+2+2)")
-    $020C: $55  (Stack test)")
+    $0208: $03  (INX x3)
+    $0209: $03  (DEY x2 from $05)
+    $020A: $AA  (Branch test)
+    $020B: $06  (Subroutine: 2+2+2)
+    $020C: $55  (Stack test)
     $020D: $44  (Indexed: DATA[3])
     $020E: $99  (Zero page indexed)""")
 

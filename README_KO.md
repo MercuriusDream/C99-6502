@@ -14,7 +14,7 @@
 
 본 프로젝트는 사이클 정밀도를 보장하는 MOS 6502 마이크로프로세서와 그 변형을 에뮬레이팅하는 C99로 작성된 에뮬레이터로, 설계 문서에 포함된 작동 특성과 타이밍 관련 요점을 포함한 원 NMOS 6502 프로세서의 모든 작동을 섬세하게 모방하는 것이 특징입니다.
 
-본 에뮬레이터는 개발자 문서에 서술된 명령어 세트 전체에 더하여 안정적으로 동작하는 비공식 opcode들까지 지원하며, page-crossing과 분기 과정에서 발생하는 시간적 지연을 포함하여 사이클 측정을 구현하였습니다. `JMP ($xxFF)` 래핑 버그, 제로페이지 주소 래핑, 그리고 NMOS의 십진수 모드 플래그 세멘틱과 같은 하드웨어 특성이 정밀하게 구현되었습니다. 코드베이스는 버스 인터페이스, 지역 기반의 메모리 관리, CPU 코어, 주소 지정 방식, 명령어 실행, 스택 명령, 그리고 실행 트레이스를 다루는 모듈로 구성됩니다.
+본 에뮬레이터는 개발자 문서에 서술된 명령어 세트 전체에 더하여 흔히 쓰이는 안정적으로 동작하는 비공식 opcode들까지 지원하며, page-crossing과 분기 과정에서 발생하는 시간적 지연을 포함하여 사이클 측정을 구현하였습니다. `JMP ($xxFF)` 래핑 버그, 제로페이지 주소 래핑, 그리고 NMOS의 십진수 모드 플래그 세멘틱과 같은 하드웨어 특성이 정밀하게 구현되었습니다. 코드베이스는 버스 인터페이스, 지역 기반의 메모리 관리, CPU 코어, 주소 지정 방식, 명령어 실행, 스택 명령, 그리고 실행 트레이스를 다루는 모듈로 구성됩니다.
 
 메모리의 구성은 주소가 RAM, ROM, 그리고 입출력 영역으로 구분되어 있는 지역 기반 시스템을 사용합니다. 기본 구성의 경우, 32KiB RAM ($0000-$7FFF)과 32KiB ROM ($8000-$FFFF)을 할당함으로서 다양한 클래식 6502 시스템의 구성을 모방합니다. ROM 영역은 자동으로 쓰기 보호가 적용되며, 입출력 영역은 디바이스 에뮬레이션을 위한 커스텀 읽기/쓰기 핸들러를 지원합니다. 이 유연한 아키텍처는 NES, Apple II, Commodore 64와 같은 여러 시스템의 적절한 메모리 매핑을 구성할 수 있게 함으로서 다양한 시스템의 정확한 에뮬레이션을 가능케 합니다.
 
@@ -260,7 +260,7 @@ ROM 영역은 자동적으로 쓰기 보호되며, ROM 주소로의 쓰기는 �
 | ------ | --------- | ----------- |
 | BCD (십진수) 모드 플래그 | `N`, `Z` 플래그는 BCD 연산 이전의 바이너리 결과를 반영합니다; `V` 플래그의 경우 바이너리 연산 이후의 결과를 반영합니다. | `N`, `Z` 플래그는 BCD 연산 이후의 결과를 반영합니다; `V` 플래그의 경우 바이너리 연산 이후의 결과를 반영합니다. |
 | `$xxFF` 에서의 간접 `JMP` | `JMP ($xxFF)` 는 페이지 내에서 래핑되며, `$xx00` 의 high byte를 같은 페이지에서 읽습니다. | 페이지 크로싱 문제가 수정되었습니다; `JMP ($xxFF)` 의 경우 다음 페이지에서 high byte를 읽습니다. |
-| 명령어 세트 | 기본 6502 명령어 세트 (56개의 공식 명령)과 안정적으로 작동하는 비공식 MOS 6502 명령어 일부 포함 (`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`). | 기본 6502 명령어 세트 + 10개의 신규 CMOS 65C02 명령: `BRA` (무조건 분기), `PHX/PHY` (X/Y 푸시), `PLX/PLY` (X/Y 풀), `STZ` (`0` 저장), `TRB`/`TSB` (비트 테스트 및 Reset / Set), `WAI` (Interrupt 대기), `STP` (프로세서 정지). 32개의 Rockwell/WDC 비트 연산  `RMB0-7` (메모리 비트 리셋), `SMB0-7` (메모리 비트 셋), `BBR0-7` (비트 리셋 시 분기), `BBS0-7` (비트 셋 시 분기) / 비공식 명령의 경우 `NOP`로 처리 |
+| 명령어 세트 | 기본 6502 명령어 세트 (56개의 공식 명령 / 151개의 공식 opcode)과 안정적으로 작동하는 비공식 MOS 6502 명령어 일부 포함 (`LAX`, `SAX`, `DCP`, `ISC`, `SLO`, `RLA`, `SRE`, `RRA`). | 기본 6502 명령어 세트 + 10개의 신규 CMOS 65C02 명령: `BRA` (무조건 분기), `PHX/PHY` (X/Y 푸시), `PLX/PLY` (X/Y 풀), `STZ` (`0` 저장), `TRB`/`TSB` (비트 테스트 및 Reset / Set), `WAI` (Interrupt 대기), `STP` (프로세서 정지). 32개의 Rockwell/WDC 비트 연산  `RMB0-7` (메모리 비트 리셋), `SMB0-7` (메모리 비트 셋), `BBR0-7` (비트 리셋 시 분기), `BBS0-7` (비트 셋 시 분기) / 비공식 명령의 경우 `NOP`로 처리 |
 | 변형 검사 | 명령은 변형 검사 없이 실행됩니다. | 65C02 전용 명령은 CPU가 65C02 모드일 때만 실행되며, NMOS 모드에서는 NOP로 처리됩니다. |
 
 *참고: 두 경우 모두 올림 플래그 (`C`)와 오버플로우 플래그 (`V`)는 동일하게 작동합니다.*
@@ -338,7 +338,7 @@ make interrupt-test
 
 ## 디버깅 및 프로파일링 도구
 
-에뮬레이터는 프로그램 실행을 분석하고, 버그를 찾고, 코드를 최적화하는 데 도움이 되는 포괄적인 디버깅 및 프로파일링 시스템을 포함합니다. 디버깅 기능은 `debugging.h` 라이브러리를 통해 제공됩니다. 주요 기능은 다음과 같습니다:
+에뮬레이터는 프로그램 실행을 분석하고, 버그를 찾고, 코드를 최적화하는 데 도움이 되는 포괄적인 디버깅 및 프로파일링 시스템을 포함합니다. 디버깅 기능은 `debugger.h` 라이브러리를 통해 제공됩니다. 주요 기능은 다음과 같습니다:
 
 ### 기능 개요
 
@@ -356,7 +356,7 @@ make interrupt-test
 ### 사용 예시
 
 ```c
-#include "debugging.h"
+#include "debugger.h"
 
 // 디버거 초기화
 debugger_init();
@@ -424,7 +424,7 @@ bin/functional_test -c 65c02
 
 ### 기본 검증 테스트
 
-본 에뮬레이터는 호스트 도구를 포함하여, 6502와 65C02의 작동을 시험하는 테스트를 *(약칭 verification test suite)* `tests/verify_test.c`에 포함하고 있습니다.
+본 에뮬레이터는 호스트 도구를 포함하여, 6502와 65C02의 작동을 시험하는 테스트를 *(약칭 verification test suite)* `tests/minimal/verify_test.c`에 포함하고 있습니다.
 
 ```bash
 # NMOS 6502 검증
@@ -432,8 +432,7 @@ make verify
 bin/mos6502 -f tests/minimal/test.bin -a 8000 -t
 
 # CMOS 65C02 검증
-cd tests/minimal && python3 build_65c02_test.py && cd ../..
-clang -std=c99 -O2 -Wall -Iinclude src/*.c tests/minimal/verify_65c02_test.c -o bin/verify_65c02_test
+make verify-65c02
 bin/verify_65c02_test
 ```
 
@@ -457,7 +456,7 @@ bin/verify_65c02_test
 │   ├── addressing.c
 │   ├── bus.c
 │   ├── cpu.c
-│   ├── debugging.c           # 디버깅 및 프로파일링
+│   ├── debugger.c            # 디버깅 및 프로파일링
 │   ├── instructions_handlers.c        # Opcode 디스패치
 │   ├── instructions_implementation.c  # Opcode 핸들러
 │   ├── instructions_table.c           # Opcode 메타데이터
@@ -473,12 +472,14 @@ bin/verify_65c02_test
 │   ├── minimal/              # 최소 및 65C02 테스트 스위트
 │   ├── verify_test.c         # 기본 검증
 │   ├── debug_test.c          # 디버거 테스트
-│   └── interrupt_test.c      # 인터럽트 테스트
+│   ├── interrupt_test.c      # 인터럽트 테스트
+│   ├── simple_debug_test.c   # 단순 디버거 테스트
+│   └── undocumented_test.c    # 비공식 opcode 테스트
 ├── include/                  # Header files
 │   ├── addressing.h
 │   ├── bus.h
 │   ├── cpu.h
-│   ├── debugging.h
+│   ├── debugger.h
 │   ├── instructions_handlers.h
 │   ├── instructions_implementation.h
 │   ├── instructions_table.h
@@ -500,7 +501,7 @@ bin/verify_65c02_test
 
 ## 참고 사항
 
-본 에뮬레이터는 MOS Technology 6502 Programming Manual, [6502.org](https://6502.org/)의 문서 및 [Visual 6502](https://visual6502.org)의 트랜지스터 단위 구현 프로젝트를 기반으로 설계, 작성, 구현되었습니다.
+본 에뮬레이터는 MOS Technology 6502 Programming Manual, [Masswerk의 6502 참고 자료](https://www.masswerk.at/6502/)의 문서 및 [Visual 6502](https://visual6502.org)의 트랜지스터 단위 구현 프로젝트를 기반으로 설계, 작성, 구현되었습니다.
 
 ## 라이센스
 
@@ -508,7 +509,7 @@ bin/verify_65c02_test
 
 ### 오픈소스 라이센스
 
-[tests/6502_functional_test](tests/6502_functional_test) 폴더 내에는 Klaus Dormann이 제작한 [6502_functional_test](https://github.com/klaus-dormann/6502_functional_test)과 본 프로젝트의 관련 파일이 포함되어 있으며, 해당 폴더 내의 파일은 GNU General Public License Version 3.0 하 보호됩니다. 해당 라이센스 관련 정보는 [해당 폴더 내의 README](tests/6502_functional_test/README_KO.md), 그리고 [해당 폴더 내의 LICENSE](tests/6502_functional_test/LICENSE)를 참조하십시오.
+[tests/6502_functional_test](tests/6502_functional_test) 폴더 내에는 Klaus Dormann이 제작한 [6502_functional_test](https://github.com/Klaus2m5/6502_65C02_functional_tests)과 본 프로젝트의 관련 파일이 포함되어 있으며, 해당 폴더 내의 파일은 GNU General Public License Version 3.0 하 보호됩니다. 해당 라이센스 관련 정보는 [해당 폴더 내의 README](tests/6502_functional_test/README_KO.md), 그리고 [해당 폴더 내의 LICENSE](tests/6502_functional_test/LICENSE)를 참조하십시오.
 
 ## 또한
 

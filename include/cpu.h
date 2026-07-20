@@ -5,7 +5,7 @@
 
 extern MEM_WORD OPCODE;
 extern SIGNED_MEM_WORD REL_OFFSET;
-extern MEM_TWO_WORDS CYCLES;
+extern uint32_t CYCLES;
 
 // CPU variant configuration
 void cpu_set_variant(CPU_VARIANT variant);
@@ -20,7 +20,7 @@ int cpu_is_stopped(void);
 void cpu_init(void);
 void cpu_reset();
 void cpu_step();
-void cpu_run(MEM_TWO_WORDS MAX_CYCLES);
+void cpu_run(uint32_t MAX_CYCLES);
 void cpu_irq();
 void cpu_nmi();
 

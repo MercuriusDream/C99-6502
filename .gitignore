@@ -11,7 +11,8 @@ tests/6502_functional_test/*.lst
 # Test-generated files
 tests/minimal/*.bin
 
-# pre_generated
+# Analyzer artifacts
+*.plist
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,c
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,visualstudio,c

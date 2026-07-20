@@ -39,6 +39,8 @@ void INY(void);
 void DEY(void);
 void INC(void);
 void DEC(void);
+void INC_A(void);
+void DEC_A(void);
 void CLC(void);
 void SEC(void);
 void CLI(void);
@@ -75,6 +77,11 @@ void RLA(void);
 void SRE(void);
 void RRA(void);
 void NOP_READ(void);
+void ANC(void);
+void ALR(void);
+void ARR(void);
+void ALT_SBC(void);
+void op_kil(void);
 
 // CMOS 65C02 instructions
 void BRA_(void);
